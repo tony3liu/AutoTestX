@@ -12,6 +12,7 @@ import {
   FileText,
   Brain,
   Clock,
+  MessageSquare,
   MessagesSquare,
   Puzzle,
 } from 'lucide-react';
@@ -73,11 +74,12 @@ export function Sidebar() {
 
   const navItems = [
     { to: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" strokeWidth={2} />, label: '测试大盘' },
+    { to: '/chat', icon: <MessageSquare className="h-5 w-5" strokeWidth={2} />, label: '智能问答' },
+    { to: '/channels', icon: <MessagesSquare className="h-5 w-5" strokeWidth={2} />, label: '频道' },
+    { to: '/skills', icon: <Puzzle className="h-5 w-5" strokeWidth={2} />, label: '技能' },
     { to: '/test-cases', icon: <ListTodo className="h-5 w-5" strokeWidth={2} />, label: '用例管理' },
     { to: '/schedules', icon: <Clock className="h-5 w-5" strokeWidth={2} />, label: '定期执行' },
     { to: '/reports', icon: <FileText className="h-5 w-5" strokeWidth={2} />, label: '测试报告' },
-    { to: '/channels', icon: <MessagesSquare className="h-5 w-5" strokeWidth={2} />, label: '频道管理' },
-    { to: '/skills', icon: <Puzzle className="h-5 w-5" strokeWidth={2} />, label: '技能管理' },
     { to: '/models', icon: <Brain className="h-5 w-5" strokeWidth={2} />, label: '模型设置' },
   ];
 

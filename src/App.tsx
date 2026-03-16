@@ -18,6 +18,7 @@ import { Channels } from './pages/Channels';
 import { Skills } from './pages/Skills';
 import { Settings } from './pages/Settings';
 import { Setup } from './pages/Setup';
+import { Chat } from './pages/Chat';
 import { useSettingsStore } from './stores/settings';
 import { useGatewayStore } from './stores/gateway';
 import { applyGatewayTransportPreference } from './lib/api-client';
@@ -167,6 +168,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="/test-cases" element={<TestCases />} />
             <Route path="/schedules" element={<Schedules />} />
             <Route path="/reports" element={<Reports />} />
