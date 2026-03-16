@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ListTodo,
   FileText,
+  Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settings';
@@ -71,6 +72,7 @@ export function Sidebar() {
     { to: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" strokeWidth={2} />, label: '测试大盘' },
     { to: '/test-cases', icon: <ListTodo className="h-5 w-5" strokeWidth={2} />, label: '用例管理' },
     { to: '/reports', icon: <FileText className="h-5 w-5" strokeWidth={2} />, label: '测试报告' },
+    { to: '/models', icon: <Brain className="h-5 w-5" strokeWidth={2} />, label: '模型设置' },
   ];
 
   return (

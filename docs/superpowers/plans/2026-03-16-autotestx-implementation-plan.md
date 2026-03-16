@@ -115,3 +115,22 @@
 - [x] **步骤 4：提交预览 UI 代码**
 运行：`git add src/pages/Executor src/components/test-runner src/App.tsx`
 运行：`git commit -m "feat: execution preview UI"`
+
+## Chunk 6: 模型配置与集成
+
+**涉及文件：**
+- 修改：`src/components/layout/Sidebar.tsx`
+- 修改：`src/App.tsx`
+- 修改：`electron/gateway/test-runner.ts`
+
+- [x] **步骤 1：集成 ClawX 的模型和供应商设置页面**
+在侧边栏添加“模型设置”入口，允许用户配置 OpenAI/Anthropic 等账户。
+
+- [x] **步骤 2：更新执行引擎以支持从设置中读取 API Key**
+重构 `TestRunner` 以从 `ProviderService` 中读取默认账户的 API Key 和模型配置，不再单纯依赖环境变量。
+
+- [ ] **步骤 3：支持在测试用例级别指定模型（可选）**
+允许用户为特定测试用例选择不同的 AI 模型或供应商。
+
+- [ ] **步骤 4：提交配置集成代码**
+运行：`git add . && git commit -m "feat: integrate model configuration settings"`
