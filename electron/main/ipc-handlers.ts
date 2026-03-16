@@ -148,6 +148,39 @@ export function registerIpcHandlers(
 
   // File staging handlers (upload/send separation)
   registerFileHandlers();
+
+  // Test DB Handlers for AutoTestX
+  registerTestHandlers();
+}
+
+import { testDb } from '../services/test-db';
+
+function registerTestHandlers(): void {
+  ipcMain.handle('test:createCase', async (_, testCase: any) => {
+    const stmt = testDb.getDb().prepare(`
+      INSERT INTO test_cases (id, name, steps, assertions, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    const now = Date.now();
+    stmt.run(
+      testCase.id, 
+      testCase.name, 
+      JSON.stringify(testCase.steps), 
+      JSON.stringify(testCase.assertions), 
+      now
+    );
+    return { ...testCase, createdAt: now };
+  });
+
+  ipcMain.handle('test:listCases', async () => {
+    const stmt = testDb.getDb().prepare('SELECT * FROM test_cases ORDER BY created_at DESC');
+    const rows = stmt.all() as any[];
+    return rows.map(row => ({
+      ...row,
+      steps: JSON.parse(row.steps || '[]'),
+      assertions: JSON.parse(row.assertions || '[]')
+    }));
+  });
 }
 
 type HostApiFetchRequest = {

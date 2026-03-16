@@ -137,6 +137,10 @@ const electronAPI = {
         'openclaw:getConfigDir',
         'openclaw:getSkillsDir',
         'openclaw:getCliCommand',
+        // Test Management
+        'test:createCase',
+        'test:listCases',
+        'test:run',
       ];
 
       if (validChannels.includes(channel)) {
@@ -175,6 +179,7 @@ const electronAPI = {
         'oauth:success',
         'oauth:error',
         'openclaw:cli-installed',
+        'test:log',
       ];
 
       if (validChannels.includes(channel)) {
