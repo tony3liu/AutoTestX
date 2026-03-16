@@ -12,6 +12,8 @@ import {
   FileText,
   Brain,
   Clock,
+  MessagesSquare,
+  Puzzle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settings';
@@ -74,6 +76,8 @@ export function Sidebar() {
     { to: '/test-cases', icon: <ListTodo className="h-5 w-5" strokeWidth={2} />, label: '用例管理' },
     { to: '/schedules', icon: <Clock className="h-5 w-5" strokeWidth={2} />, label: '定期执行' },
     { to: '/reports', icon: <FileText className="h-5 w-5" strokeWidth={2} />, label: '测试报告' },
+    { to: '/channels', icon: <MessagesSquare className="h-5 w-5" strokeWidth={2} />, label: '频道管理' },
+    { to: '/skills', icon: <Puzzle className="h-5 w-5" strokeWidth={2} />, label: '技能管理' },
     { to: '/models', icon: <Brain className="h-5 w-5" strokeWidth={2} />, label: '模型设置' },
   ];
 

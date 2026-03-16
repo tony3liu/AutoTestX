@@ -16,7 +16,7 @@ import { warmupNetworkOptimization } from '../utils/uv-env';
 import { initTelemetry } from '../utils/telemetry';
 
 import { ClawHubService } from '../gateway/clawhub';
-import { ensureAutoTest XContext, repairAutoTest XOnlyBootstrapFiles } from '../utils/openclaw-workspace';
+import { ensureAutoTestXContext, repairAutoTestXOnlyBootstrapFiles } from '../utils/openclaw-workspace';
 import { autoInstallCliIfNeeded, generateCompletionCache, installCompletionToProfile } from '../utils/openclaw-cli';
 import { isQuitting, setQuitting } from './app-state';
 import { applyProxySettings } from './proxy';
@@ -289,9 +289,9 @@ async function initialize(): Promise<void> {
   // so it respects the user's "Auto-check for updates" setting.
 
   // Repair any bootstrap files that only contain AutoTest X markers (no OpenClaw
-  // template content). This fixes a race condition where ensureAutoTest XContext()
+  // template content). This fixes a race condition where ensureAutoTestXContext()
   // previously created the file before the gateway could seed the full template.
-  void repairAutoTest XOnlyBootstrapFiles().catch((error) => {
+  void repairAutoTestXOnlyBootstrapFiles().catch((error) => {
     logger.warn('Failed to repair bootstrap files:', error);
   });
 
@@ -319,7 +319,7 @@ async function initialize(): Promise<void> {
   gatewayManager.on('status', (status: { state: string }) => {
     hostEventBus.emit('gateway:status', status);
     if (status.state === 'running') {
-      void ensureAutoTest XContext().catch((error) => {
+      void ensureAutoTestXContext().catch((error) => {
         logger.warn('Failed to re-merge AutoTest X context after gateway reconnect:', error);
       });
     }
@@ -407,8 +407,8 @@ async function initialize(): Promise<void> {
 
   // Merge AutoTest X context snippets into the workspace bootstrap files.
   // The gateway seeds workspace files asynchronously after its HTTP server
-  // is ready, so ensureAutoTest XContext will retry until the target files appear.
-  void ensureAutoTest XContext().catch((error) => {
+  // is ready, so ensureAutoTestXContext will retry until the target files appear.
+  void ensureAutoTestXContext().catch((error) => {
     logger.warn('Failed to merge AutoTest X context into workspace:', error);
   });
 

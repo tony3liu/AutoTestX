@@ -43,7 +43,7 @@ export function getOpenClawSkillsDir(): string {
 /**
  * Get AutoTest X config directory
  */
-export function getAutoTest XConfigDir(): string {
+export function getAutoTestXConfigDir(): string {
   return join(homedir(), '.autotestx');
 }
 

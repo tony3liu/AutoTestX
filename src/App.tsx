@@ -14,6 +14,8 @@ import { TestCases } from './pages/test-cases';
 import { Reports } from './pages/reports';
 import { Schedules } from './pages/schedules';
 import { Models } from './pages/Models';
+import { Channels } from './pages/Channels';
+import { Skills } from './pages/Skills';
 import { Settings } from './pages/Settings';
 import { Setup } from './pages/Setup';
 import { useSettingsStore } from './stores/settings';
@@ -169,6 +171,8 @@ function App() {
             <Route path="/schedules" element={<Schedules />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/models" element={<Models />} />
+            <Route path="/channels" element={<Channels />} />
+            <Route path="/skills" element={<Skills />} />
             <Route path="/settings/*" element={<Settings />} />
           </Route>
         </Routes>
