@@ -12,6 +12,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Dashboard } from './pages/dashboard';
 import { TestCases } from './pages/test-cases';
 import { Reports } from './pages/reports';
+import { Schedules } from './pages/schedules';
 import { Models } from './pages/Models';
 import { Settings } from './pages/Settings';
 import { Setup } from './pages/Setup';
@@ -165,6 +166,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/test-cases" element={<TestCases />} />
+            <Route path="/schedules" element={<Schedules />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/models" element={<Models />} />
             <Route path="/settings/*" element={<Settings />} />

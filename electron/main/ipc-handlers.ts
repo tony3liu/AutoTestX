@@ -151,6 +151,9 @@ export function registerIpcHandlers(
 
   // Test DB Handlers for AutoTestX
   registerTestHandlers();
+  
+  // Test Scheduler Handlers
+  registerScheduleHandlers();
 }
 
 import { testDb } from '../services/test-db';
@@ -173,6 +176,29 @@ function registerTestHandlers(): void {
       testCase.vendorId || null
     );
     return { ...testCase, createdAt: now };
+  });
+
+  ipcMain.handle('test:updateCase', async (_, testCase: any) => {
+    const stmt = testDb.getDb().prepare(`
+      UPDATE test_cases 
+      SET name = ?, steps = ?, assertions = ?, model_id = ?, vendor_id = ?
+      WHERE id = ?
+    `);
+    stmt.run(
+      testCase.name,
+      JSON.stringify(testCase.steps),
+      JSON.stringify(testCase.assertions),
+      testCase.modelId || null,
+      testCase.accountId || null,
+      testCase.id
+    );
+    return testCase;
+  });
+
+  ipcMain.handle('test:deleteCase', async (_, id: string) => {
+    const stmt = testDb.getDb().prepare('DELETE FROM test_cases WHERE id = ?');
+    stmt.run(id);
+    return { success: true };
   });
 
   ipcMain.handle('test:listCases', async () => {
@@ -243,6 +269,27 @@ function registerTestHandlers(): void {
       screenshots: JSON.parse(row.screenshots || '[]'),
       logs: JSON.parse(row.logs || '[]')
     }));
+  });
+}
+
+import { testScheduler } from '../services/scheduler';
+
+function registerScheduleHandlers(): void {
+  ipcMain.handle('test:listSchedules', async () => {
+    return testScheduler.listSchedules();
+  });
+
+  ipcMain.handle('test:createSchedule', async (_, input: any) => {
+    return testScheduler.createSchedule(input);
+  });
+
+  ipcMain.handle('test:updateSchedule', async (_, id: string, patch: any) => {
+    return testScheduler.updateSchedule(id, patch);
+  });
+
+  ipcMain.handle('test:deleteSchedule', async (_, id: string) => {
+    testScheduler.deleteSchedule(id);
+    return { success: true };
   });
 }
 

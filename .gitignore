@@ -60,7 +60,9 @@ resources/bin
 
 build/
 artifacts/
-docs/pr-session-notes-*.md
+# Documentation
+doc/
+docs/
 
 .cursor/
 .pnpm-store/

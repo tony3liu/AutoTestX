@@ -47,6 +47,16 @@ class TestDbService {
         logs TEXT,
         created_at INTEGER
       );
+
+      CREATE TABLE IF NOT EXISTS test_schedules (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        test_case_id TEXT,
+        cron_expr TEXT,
+        enabled INTEGER DEFAULT 1,
+        last_run_at INTEGER,
+        created_at INTEGER
+      );
     `);
     
     // Migration for test_cases model selection

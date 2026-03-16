@@ -262,6 +262,11 @@ async function initialize(): Promise<void> {
   // Register IPC handlers
   registerIpcHandlers(gatewayManager, clawHubService, window);
 
+  // Initialize Test Scheduler (AutoTestX)
+  import('../services/scheduler').then(({ testScheduler }) => {
+    testScheduler.init();
+  });
+
   hostApiServer = startHostApiServer({
     gatewayManager,
     clawHubService,

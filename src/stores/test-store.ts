@@ -23,6 +23,8 @@ interface TestState {
   fetchTestSuites?: () => Promise<void>;
   createTestSuite?: (suite: Omit<TestSuite, 'createdAt'>) => Promise<TestSuite>;
   runTest: (testCaseId: string) => Promise<TestResult>;
+  updateTestCase: (testCase: TestCase) => Promise<TestCase>;
+  deleteTestCase: (id: string) => Promise<void>;
 }
 
 export const useTestStore = create<TestState>((set) => ({
@@ -66,6 +68,35 @@ export const useTestStore = create<TestState>((set) => ({
       return created;
     } catch (err: any) {
       set({ error: err.message || 'Failed to create test case', isSaving: false });
+      throw err;
+    }
+  },
+
+  updateTestCase: async (testCase) => {
+    try {
+      set({ isSaving: true, error: null });
+      const updated = await invokeIpc<TestCase>('test:updateCase', testCase);
+      set((state) => ({
+        testCases: state.testCases.map((c) => (c.id === updated.id ? updated : c)),
+        isSaving: false,
+      }));
+      return updated;
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to update test case', isSaving: false });
+      throw err;
+    }
+  },
+
+  deleteTestCase: async (id: string) => {
+    try {
+      set({ isSaving: true, error: null });
+      await invokeIpc('test:deleteCase', id);
+      set((state) => ({
+        testCases: state.testCases.filter((c) => c.id !== id),
+        isSaving: false,
+      }));
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to delete test case', isSaving: false });
       throw err;
     }
   },
