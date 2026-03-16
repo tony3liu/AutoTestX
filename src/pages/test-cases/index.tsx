@@ -1,25 +1,105 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Plus } from 'lucide-react';
 import { useTestStore } from '@/stores/test-store';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export function TestCases() {
-  const { testCases, fetchTestCases, isLoading } = useTestStore();
+  const { testCases, fetchTestCases, createTestCase, isLoading, isSaving } = useTestStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const [newCaseData, setNewCaseData] = useState({ name: '', steps: '', assertions: '' });
 
   useEffect(() => {
     fetchTestCases();
   }, [fetchTestCases]);
 
+  const handleCreate = async () => {
+    try {
+      const stepsList = newCaseData.steps.split('\\n').filter(s => s.trim());
+      const assertionsList = newCaseData.assertions.split('\\n').filter(a => a.trim());
+      
+      await createTestCase({
+        id: crypto.randomUUID(),
+        name: newCaseData.name,
+        steps: stepsList,
+        assertions: assertionsList.map(a => ({ type: 'text', expected: a })),
+        variables: {}
+      });
+      setIsOpen(false);
+      setNewCaseData({ name: '', steps: '', assertions: '' });
+    } catch (e) {
+      console.error(e);
+      // Can add toast here later
+    }
+  };
+
   return (
     <div className="flex-1 space-y-6 p-8 bg-background">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight text-foreground">用例管理</h2>
-        <div className="flex items-center space-x-2">
-          <Button className="font-semibold shadow-sm">
-            <Plus className="mr-2 h-4 w-4" /> 新建用例
-          </Button>
-        </div>
+        
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild>
+            <Button className="font-semibold shadow-sm">
+              <Plus className="mr-2 h-4 w-4" /> 新建用例
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="w-[400px] sm:w-[540px] sm:max-w-none flex flex-col border-border/40">
+            <SheetHeader className="text-left space-y-1 mt-2">
+              <SheetTitle className="text-2xl font-bold">新建自动测试用例</SheetTitle>
+              <SheetDescription className="text-base text-muted-foreground">
+                使用自然语言编写 AI 能够理解的浏览器操作步骤和断言规则。
+              </SheetDescription>
+            </SheetHeader>
+            
+            <div className="flex-1 overflow-y-auto py-6 space-y-6 px-1">
+              <div className="space-y-2">
+                <Label htmlFor="case-name" className="text-base font-semibold">用例名称</Label>
+                <Input 
+                  id="case-name" 
+                  placeholder="例如：登录并在后台首页验证标题" 
+                  className="bg-secondary/30"
+                  value={newCaseData.name}
+                  onChange={(e) => setNewCaseData({ ...newCaseData, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="case-steps" className="text-base font-semibold">操作步骤 (按行分割)</Label>
+                <Textarea 
+                  id="case-steps" 
+                  className="min-h-[150px] bg-secondary/30 resize-none font-mono text-sm leading-relaxed" 
+                  placeholder="1. 打开 https://example.com&#10;2. 点击右上角的 登录 按钮&#10;3. 在邮箱输入框输入 test@example.com" 
+                  value={newCaseData.steps}
+                  onChange={(e) => setNewCaseData({ ...newCaseData, steps: e.target.value })}
+                />
+                <p className="text-sm text-muted-foreground mt-2">支持多步骤，通过回车换行来区分下一步。</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="case-assertions" className="text-base font-semibold">预期断言 (按行分割)</Label>
+                <Textarea 
+                  id="case-assertions" 
+                  className="min-h-[100px] bg-secondary/30 resize-none font-mono text-sm leading-relaxed" 
+                  placeholder="1. 页面中应该包含文本 欢迎回来&#10;2. 应该能看到头像元素" 
+                  value={newCaseData.assertions}
+                  onChange={(e) => setNewCaseData({ ...newCaseData, assertions: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <SheetFooter className="mt-auto pt-6 border-t border-border/40 pb-2">
+              <div className="flex w-full justify-end gap-3">
+                <Button variant="outline" onClick={() => setIsOpen(false)}>取消</Button>
+                <Button onClick={handleCreate} disabled={!newCaseData.name || isSaving}>
+                  {isSaving ? '保存中...' : '创建用例'}
+                </Button>
+              </div>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {isLoading ? (
@@ -34,7 +114,7 @@ export function TestCases() {
           <p className="mt-2 text-sm text-muted-foreground max-w-sm">
             开始编写您的第一个 AI 自动化测试用例，只需采用自然语言描述即可。
           </p>
-          <Button className="mt-6 font-semibold" variant="default" size="lg">
+          <Button className="mt-6 font-semibold" variant="default" size="lg" onClick={() => setIsOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> 马上体验
           </Button>
         </div>
