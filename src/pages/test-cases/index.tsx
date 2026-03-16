@@ -4,12 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Plus } from 'lucide-react';
+import { Plus, PlayCircle } from 'lucide-react';
 import { useTestStore } from '@/stores/test-store';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export function TestCases() {
-  const { testCases, fetchTestCases, createTestCase, isLoading, isSaving } = useTestStore();
+  const { testCases, fetchTestCases, createTestCase, runTest, isLoading, isSaving, runningTestCaseId } = useTestStore();
   const [isOpen, setIsOpen] = useState(false);
   const [newCaseData, setNewCaseData] = useState({ name: '', steps: '', assertions: '' });
 
@@ -34,6 +35,21 @@ export function TestCases() {
     } catch (e) {
       console.error(e);
       // Can add toast here later
+      toast.success('测试用例创建成功');
+    }
+  };
+
+  const handleRunTest = async (testCaseId: string, testName: string) => {
+    try {
+      toast.info(`正在执行用例 [${testName}]... 请不要切走焦点或关闭应用`);
+      const result = await runTest(testCaseId);
+      if (result.status === 'pass') {
+        toast.success(`用例 [${testName}] 执行通过！`);
+      } else {
+        toast.error(`用例 [${testName}] 执行失败: ${result.error || '详见测试报告'}`);
+      }
+    } catch (e: any) {
+      toast.error(`执行出错: ${e.message}`);
     }
   };
 
@@ -128,8 +144,18 @@ export function TestCases() {
                     <h3 className="font-semibold text-lg">{tc.name}</h3>
                     <p className="text-sm text-muted-foreground mt-1">包含 {tc.steps.length} 个步骤, {tc.assertions.length} 个断言</p>
                   </div>
-                  <Button variant="outline" size="sm" className="font-medium">
-                    运行用例
+                  <Button 
+                    variant={runningTestCaseId === tc.id ? "default" : "outline"}
+                    size="sm" 
+                    className="font-medium min-w-[100px]"
+                    disabled={runningTestCaseId !== null}
+                    onClick={() => handleRunTest(tc.id, tc.name)}
+                  >
+                    {runningTestCaseId === tc.id ? (
+                       <span className="flex items-center gap-2 animate-pulse"><PlayCircle className="h-4 w-4" /> 运行中...</span>
+                    ) : (
+                       <span>运行用例</span>
+                    )}
                   </Button>
                 </div>
               </CardContent>

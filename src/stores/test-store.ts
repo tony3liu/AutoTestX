@@ -11,6 +11,7 @@ interface TestState {
   // Loading States
   isLoading: boolean;
   isSaving: boolean;
+  runningTestCaseId: string | null;
   error: string | null;
 
   // Actions
@@ -20,16 +21,17 @@ interface TestState {
   // Future Actions
   fetchTestSuites?: () => Promise<void>;
   createTestSuite?: (suite: Omit<TestSuite, 'createdAt'>) => Promise<TestSuite>;
-  runTest?: (testCaseId: string) => Promise<TestResult>;
+  runTest: (testCaseId: string) => Promise<TestResult>;
 }
 
-export const useTestStore = create<TestState>((set, get) => ({
+export const useTestStore = create<TestState>((set) => ({
   testCases: [],
   testSuites: [],
   testReports: [],
   
   isLoading: false,
   isSaving: false,
+  runningTestCaseId: null,
   error: null,
 
   fetchTestCases: async () => {
@@ -53,6 +55,21 @@ export const useTestStore = create<TestState>((set, get) => ({
       return created;
     } catch (err: any) {
       set({ error: err.message || 'Failed to create test case', isSaving: false });
+      throw err;
+    }
+  },
+
+  runTest: async (testCaseId: string) => {
+    try {
+      set({ runningTestCaseId: testCaseId, error: null });
+      const result = await invokeIpc<TestResult>('test:run', testCaseId);
+      set((state) => ({
+        testReports: [result, ...state.testReports],
+        runningTestCaseId: null
+      }));
+      return result;
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to run test', runningTestCaseId: null });
       throw err;
     }
   },

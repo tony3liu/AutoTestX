@@ -154,6 +154,7 @@ export function registerIpcHandlers(
 }
 
 import { testDb } from '../services/test-db';
+import { testRunner } from '../gateway/test-runner';
 
 function registerTestHandlers(): void {
   ipcMain.handle('test:createCase', async (_, testCase: any) => {
@@ -180,6 +181,45 @@ function registerTestHandlers(): void {
       steps: JSON.parse(row.steps || '[]'),
       assertions: JSON.parse(row.assertions || '[]')
     }));
+  });
+
+  ipcMain.handle('test:run', async (_, testCaseId: string) => {
+    // 1. Fetch test case from DB
+    const stmt = testDb.getDb().prepare('SELECT * FROM test_cases WHERE id = ?');
+    const row = stmt.get(testCaseId) as any;
+    if (!row) {
+      throw new Error(`Test case not found: ${testCaseId}`);
+    }
+
+    const testCase = {
+      ...row,
+      steps: JSON.parse(row.steps || '[]'),
+      assertions: JSON.parse(row.assertions || '[]')
+    };
+
+    // 2. Run the test with BrowserUse agent via TestRunner
+    const result = await testRunner.runTest(testCase);
+
+    // 3. Save the result to DB
+    const insertStmt = testDb.getDb().prepare(`
+      INSERT INTO test_reports (id, case_id, status, error, duration, screenshots, logs, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const reportId = crypto.randomUUID();
+    const now = Date.now();
+    
+    insertStmt.run(
+      reportId,
+      result.caseId,
+      result.status,
+      result.error || null,
+      result.duration,
+      JSON.stringify(result.screenshots || []),
+      JSON.stringify(result.logs || []),
+      now
+    );
+
+    return { ...result, reportId, createdAt: now };
   });
 }
 
