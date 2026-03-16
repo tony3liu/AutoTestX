@@ -159,8 +159,8 @@ import { testRunner } from '../gateway/test-runner';
 function registerTestHandlers(): void {
   ipcMain.handle('test:createCase', async (_, testCase: any) => {
     const stmt = testDb.getDb().prepare(`
-      INSERT INTO test_cases (id, name, steps, assertions, created_at)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO test_cases (id, name, steps, assertions, created_at, model_id, vendor_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
     const now = Date.now();
     stmt.run(
@@ -168,7 +168,9 @@ function registerTestHandlers(): void {
       testCase.name, 
       JSON.stringify(testCase.steps), 
       JSON.stringify(testCase.assertions), 
-      now
+      now,
+      testCase.modelId || null,
+      testCase.vendorId || null
     );
     return { ...testCase, createdAt: now };
   });
@@ -179,7 +181,9 @@ function registerTestHandlers(): void {
     return rows.map(row => ({
       ...row,
       steps: JSON.parse(row.steps || '[]'),
-      assertions: JSON.parse(row.assertions || '[]')
+      assertions: JSON.parse(row.assertions || '[]'),
+      modelId: row.model_id,
+      accountId: row.vendor_id
     }));
   });
 
@@ -194,7 +198,9 @@ function registerTestHandlers(): void {
     const testCase = {
       ...row,
       steps: JSON.parse(row.steps || '[]'),
-      assertions: JSON.parse(row.assertions || '[]')
+      assertions: JSON.parse(row.assertions || '[]'),
+      modelId: row.model_id,
+      accountId: row.vendor_id
     };
 
     // 2. Run the test with BrowserUse agent via TestRunner

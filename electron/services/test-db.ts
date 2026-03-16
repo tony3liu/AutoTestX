@@ -25,6 +25,8 @@ class TestDbService {
         name TEXT,
         steps TEXT,
         assertions TEXT,
+        model_id TEXT,
+        vendor_id TEXT,
         created_at INTEGER
       );
       
@@ -47,6 +49,18 @@ class TestDbService {
       );
     `);
     
+    // Migration for test_cases model selection
+    try {
+      this.db.prepare('SELECT model_id FROM test_cases LIMIT 1').get();
+    } catch {
+      try {
+        this.db.exec('ALTER TABLE test_cases ADD COLUMN model_id TEXT');
+        this.db.exec('ALTER TABLE test_cases ADD COLUMN vendor_id TEXT');
+      } catch (err) {
+        console.error('Failed to migrate test_cases table:', err);
+      }
+    }
+
     // Quick migration trick for development: check if case_id exists, if not recreate
     try {
       this.db.prepare('SELECT case_id FROM test_reports LIMIT 1').get();

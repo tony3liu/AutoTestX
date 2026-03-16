@@ -22,28 +22,32 @@ export class TestRunner {
 
     try {
       const combinedTask = [
-        ...testCase.steps.map((s: any) => s.action),
+        ...testCase.steps,
         "Please verify the following assertions:",
         ...testCase.assertions.map((a: any) => `- ${a.expected}`)
       ].join('\n');
 
       // Fetch the API key and model from the provider service
       const providerService = getProviderService();
-      const defaultAccountId = await providerService.getDefaultAccountId();
+      let defaultAccountId = await providerService.getDefaultAccountId();
       let apiKey = process.env.OPENAI_API_KEY || '';
-      let modelName = 'gpt-4o';
+      let modelName = testCase.modelId || 'gpt-4o';
       let baseUrl: string | undefined = undefined;
 
-      if (defaultAccountId) {
-        const account = await providerService.getAccount(defaultAccountId);
-        const storedKey = await providerService.getLegacyProviderApiKey(defaultAccountId);
+      // If test case has a specific vendor/account, use that instead of default
+      const effectiveAccountId = testCase.accountId || defaultAccountId;
+
+      if (effectiveAccountId) {
+        const account = await providerService.getAccount(effectiveAccountId);
+        const storedKey = await providerService.getLegacyProviderApiKey(effectiveAccountId);
         
         if (storedKey) {
           apiKey = storedKey;
         }
         
         if (account) {
-          modelName = account.model || modelName;
+          // Use Case-specific model if set, otherwise use account default model
+          modelName = testCase.modelId || account.model || modelName;
           baseUrl = account.baseUrl;
           logger.info(`Using provider account: ${account.label} (${account.vendorId}), model: ${modelName}`);
         }

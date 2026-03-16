@@ -4,6 +4,8 @@ export interface TestCase {
   steps: string[];
   assertions: Assertion[];
   variables: Record<string, string>;
+  modelId?: string;
+  accountId?: string;
   createdAt?: number;
 }
 

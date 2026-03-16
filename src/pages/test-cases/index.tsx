@@ -4,19 +4,29 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Plus, PlayCircle } from 'lucide-react';
+import { Plus, PlayCircle, Brain } from 'lucide-react';
 import { useTestStore } from '@/stores/test-store';
+import { useProviderStore } from '@/stores/providers';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Select } from '@/components/ui/select';
 
 export function TestCases() {
   const { testCases, fetchTestCases, createTestCase, runTest, isLoading, isSaving, runningTestCaseId } = useTestStore();
+  const { accounts, fetchProviders } = useProviderStore();
   const [isOpen, setIsOpen] = useState(false);
-  const [newCaseData, setNewCaseData] = useState({ name: '', steps: '', assertions: '' });
+  const [newCaseData, setNewCaseData] = useState({ 
+    name: '', 
+    steps: '', 
+    assertions: '',
+    accountId: '',
+    modelId: ''
+  });
 
   useEffect(() => {
     fetchTestCases();
-  }, [fetchTestCases]);
+    fetchProviders();
+  }, [fetchTestCases, fetchProviders]);
 
   const handleCreate = async () => {
     try {
@@ -28,10 +38,12 @@ export function TestCases() {
         name: newCaseData.name,
         steps: stepsList,
         assertions: assertionsList.map(a => ({ type: 'text', expected: a })),
-        variables: {}
+        variables: {},
+        accountId: newCaseData.accountId || undefined,
+        modelId: newCaseData.modelId || undefined
       });
       setIsOpen(false);
-      setNewCaseData({ name: '', steps: '', assertions: '' });
+      setNewCaseData({ name: '', steps: '', assertions: '', accountId: '', modelId: '' });
     } catch (e) {
       console.error(e);
       // Can add toast here later
@@ -104,6 +116,39 @@ export function TestCases() {
                   onChange={(e) => setNewCaseData({ ...newCaseData, assertions: e.target.value })}
                 />
               </div>
+
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-primary" />
+                  <span className="text-base font-semibold">AI 模型配置 (可选)</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">指定 AI 提供商账户</Label>
+                  <Select 
+                    value={newCaseData.accountId} 
+                    onChange={(e) => setNewCaseData({ ...newCaseData, accountId: e.target.value })}
+                  >
+                    <option value="">(系统默认配置)</option>
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.label} ({acc.vendorId})
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">指定模型 (Model ID)</Label>
+                  <Input 
+                    placeholder="例如: gpt-4o, claude-3-5-sonnet-latest" 
+                    className="bg-secondary/30"
+                    value={newCaseData.modelId}
+                    onChange={(e) => setNewCaseData({ ...newCaseData, modelId: e.target.value })}
+                  />
+                  <p className="text-[12px] text-muted-foreground">留空则使用所选账户的默认模型。</p>
+                </div>
+              </div>
             </div>
 
             <SheetFooter className="mt-auto pt-6 border-t border-border/40 pb-2">
@@ -142,7 +187,15 @@ export function TestCases() {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold text-lg">{tc.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">包含 {tc.steps.length} 个步骤, {tc.assertions.length} 个断言</p>
+                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                      <span>包含 {tc.steps.length} 个步骤, {tc.assertions.length} 个断言</span>
+                      {tc.modelId && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1"><Brain className="h-3 w-3" /> {tc.modelId}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <Button 
                     variant={runningTestCaseId === tc.id ? "default" : "outline"}
