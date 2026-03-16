@@ -2,8 +2,22 @@ import { invokeIpc } from '@/lib/api-client';
 import { trackUiEvent } from './telemetry';
 import { normalizeAppError } from './error-model';
 
-const HOST_API_PORT = 3210;
-const HOST_API_BASE = `http://127.0.0.1:${HOST_API_PORT}`;
+let currentHostApiPort = 3210;
+
+export async function initHostApi(): Promise<void> {
+  try {
+    const port = await invokeIpc<number>('app:getHostApiPort');
+    if (port) {
+      currentHostApiPort = port;
+    }
+  } catch (error) {
+    console.warn('Failed to fetch host API port, using default 3210', error);
+  }
+}
+
+function getHostApiBase(): string {
+  return `http://127.0.0.1:${currentHostApiPort}`;
+}
 
 type HostApiProxyResponse = {
   ok?: boolean;
@@ -131,7 +145,7 @@ function shouldFallbackToBrowser(message: string): boolean {
 
 function allowLocalhostFallback(): boolean {
   try {
-    return window.localStorage.getItem('clawx:allow-localhost-fallback') === '1';
+    return window.localStorage.getItem('autotestx:allow-localhost-fallback') === '1';
   } catch {
     return false;
   }
@@ -182,7 +196,7 @@ export async function hostApiFetch<T>(path: string, init?: RequestInit): Promise
   }
 
   // Browser-only fallback (non-Electron environments).
-  const response = await fetch(`${HOST_API_BASE}${path}`, {
+  const response = await fetch(`${getHostApiBase()}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
@@ -204,9 +218,7 @@ export async function hostApiFetch<T>(path: string, init?: RequestInit): Promise
 }
 
 export function createHostEventSource(path = '/api/events'): EventSource {
-  return new EventSource(`${HOST_API_BASE}${path}`);
+  return new EventSource(`${getHostApiBase()}${path}`);
 }
 
-export function getHostApiBase(): string {
-  return HOST_API_BASE;
-}
+export { getHostApiBase };

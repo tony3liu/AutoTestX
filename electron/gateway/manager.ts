@@ -109,6 +109,8 @@ export class GatewayManager extends EventEmitter {
   private reconnectAttemptsTotal = 0;
   private reconnectSuccessTotal = 0;
   private static readonly RELOAD_POLICY_REFRESH_MS = 15_000;
+  private static readonly RESTART_COOLDOWN_MS = 5000;
+  private lastRestartAt = 0;
 
   constructor(config?: Partial<ReconnectConfig>) {
     super();
@@ -144,7 +146,7 @@ export class GatewayManager extends EventEmitter {
   private async initDeviceIdentity(): Promise<void> {
     if (this.deviceIdentity) return; // already loaded
     try {
-      const identityPath = path.join(app.getPath('userData'), 'clawx-device-identity.json');
+      const identityPath = path.join(app.getPath('userData'), 'autotestx-device-identity.json');
       this.deviceIdentity = await loadOrCreateDeviceIdentity(identityPath);
       logger.debug(`Device identity loaded (deviceId=${this.deviceIdentity.deviceId})`);
     } catch (err) {
@@ -194,6 +196,7 @@ export class GatewayManager extends EventEmitter {
     }
 
     this.startLock = true;
+    this.lastRestartAt = Date.now();
     const startEpoch = this.lifecycleController.bump('start');
     logger.info(`Gateway start requested (port=${this.status.port})`);
     this.lastSpawnSummary = null;
@@ -260,6 +263,14 @@ export class GatewayManager extends EventEmitter {
         runDoctorRepair: async () => await runOpenClawDoctorRepair(),
         onDoctorRepairSuccess: () => {
           this.setStatus({ state: 'starting', error: undefined, reconnectAttempts: 0 });
+        },
+        onPortConflict: (currentPort) => {
+          const nextPort = currentPort + 1;
+          this.setStatus({ port: nextPort });
+          import('../utils/config').then(({ setRuntimeGatewayPort }) => {
+            setRuntimeGatewayPort(nextPort);
+          });
+          return nextPort;
         },
         delay: async (ms) => {
           await new Promise((resolve) => setTimeout(resolve, ms));

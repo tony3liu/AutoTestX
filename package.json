@@ -5,6 +5,8 @@
         "onlyBuiltDependencies": [
             "@discordjs/opus",
             "@whiskeysockets/baileys",
+            "better-sqlite3",
+            "canvas",
             "electron",
             "esbuild",
             "koffi",
@@ -16,9 +18,9 @@
             "isbinaryfile": "^5.0.0"
         }
     },
-    "description": "ClawX - Graphical AI Assistant based on OpenClaw",
+    "description": "AutoTest X - AI-Powered UI Automation Platform",
     "main": "dist-electron/main/index.js",
-    "author": "ClawX Team",
+    "author": "AutoTest X Team",
     "license": "MIT",
     "private": true,
     "scripts": {

@@ -7,24 +7,46 @@
  * Port configuration
  */
 export const PORTS = {
-  /** ClawX GUI development server port */
-  CLAWX_DEV: 5173,
+  /** AutoTest X GUI development server port */
+  AUTOTESTX_DEV: 5173,
   
-  /** ClawX GUI production port (for reference) */
-  CLAWX_GUI: 23333,
+  /** AutoTest X GUI production port (for reference) */
+  AUTOTESTX_GUI: 23333,
 
-  /** Local host API server port */
-  CLAWX_HOST_API: 3210,
+  /** Local host API server port (default, can be overridden at runtime) */
+  AUTOTESTX_HOST_API: 3210,
   
   /** OpenClaw Gateway port */
   OPENCLAW_GATEWAY: 18789,
-} as const;
+};
+
+/**
+ * Actual runtime port for the Host API (finds an available one if default is taken)
+ */
+let actualHostApiPort = PORTS.AUTOTESTX_HOST_API;
+let actualGatewayPort = PORTS.OPENCLAW_GATEWAY;
+
+export function setRuntimeHostApiPort(port: number): void {
+  actualHostApiPort = port;
+}
+
+export function getRuntimeHostApiPort(): number {
+  return actualHostApiPort;
+}
+
+export function setRuntimeGatewayPort(port: number): void {
+  actualGatewayPort = port;
+}
+
+export function getRuntimeGatewayPort(): number {
+  return actualGatewayPort;
+}
 
 /**
  * Get port from environment or default
  */
 export function getPort(key: keyof typeof PORTS): number {
-  const envKey = `CLAWX_PORT_${key}`;
+  const envKey = `AUTOTESTX_PORT_${key}`;
   const envValue = process.env[envKey];
   return envValue ? parseInt(envValue, 10) : PORTS[key];
 }
@@ -36,11 +58,11 @@ export const APP_PATHS = {
   /** OpenClaw configuration directory */
   OPENCLAW_CONFIG: '~/.openclaw',
   
-  /** ClawX configuration directory */
-  CLAWX_CONFIG: '~/.clawx',
+  /** AutoTest X configuration directory */
+  AUTOTESTX_CONFIG: '~/.autotestx',
   
   /** Log files directory */
-  LOGS: '~/.clawx/logs',
+  LOGS: '~/.autotestx/logs',
 } as const;
 
 /**

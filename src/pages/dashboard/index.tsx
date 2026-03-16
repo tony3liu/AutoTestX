@@ -5,7 +5,7 @@ export function Dashboard() {
   return (
     <div className="flex-1 space-y-6 p-8 bg-background">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">测试大盘</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-foreground">AutoTest X</h2>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -24,6 +24,7 @@ type StartupHooks = {
   onConnectedToManagedGateway: () => void;
   runDoctorRepair: () => Promise<boolean>;
   onDoctorRepairSuccess: () => void;
+  onPortConflict: (currentPort: number) => number;
   delay: (ms: number) => Promise<void>;
 };
 
@@ -97,6 +98,13 @@ export async function runGatewayStartupSequence(hooks: StartupHooks): Promise<vo
       if (recoveryAction === 'retry') {
         logger.warn(`Transient start error: ${String(error)}. Retrying... (${startAttempts}/${maxStartAttempts})`);
         await hooks.delay(1000);
+        continue;
+      }
+
+      if (recoveryAction === 'switch-port') {
+        const nextPort = hooks.onPortConflict(hooks.port);
+        logger.warn(`Gateway port conflict on ${hooks.port}; switching to ${nextPort} and retrying... (${startAttempts}/${maxStartAttempts})`);
+        hooks.port = nextPort;
         continue;
       }
 

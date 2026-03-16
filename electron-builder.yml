@@ -1,6 +1,6 @@
-appId: app.clawx.desktop
-productName: ClawX
-copyright: Copyright © 2026 ClawX
+appId: app.autotestx.desktop
+productName: AutoTest X
+copyright: Copyright © 2026 AutoTest X
 compression: maximum
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 
@@ -55,7 +55,7 @@ publish:
     useMultipleRangeRequest: false
   - provider: github
     owner: ValueCell-ai
-    repo: ClawX
+    repo: AutoTestX
 
 # macOS Configuration
 mac:
@@ -82,8 +82,8 @@ mac:
   entitlementsInherit: entitlements.mac.plist
   notarize: true
   extendInfo:
-    NSMicrophoneUsageDescription: ClawX requires microphone access for voice features
-    NSCameraUsageDescription: ClawX requires camera access for video features
+    NSMicrophoneUsageDescription: AutoTest X requires microphone access for voice features
+    NSCameraUsageDescription: AutoTest X requires camera access for video features
 
 dmg:
   background: resources/dmg-background.png
@@ -127,8 +127,8 @@ nsis:
   differentialPackage: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: ClawX
-  uninstallDisplayName: ClawX
+  shortcutName: AutoTest X
+  uninstallDisplayName: AutoTest X
   license: LICENSE
   include: scripts/installer.nsh
   installerIcon: resources/icons/icon.ico
@@ -155,17 +155,17 @@ linux:
       arch:
         - x64
   category: Utility
-  maintainer: ClawX Team <public@valuecell.ai>
-  vendor: ClawX
-  synopsis: AI Assistant powered by OpenClaw
-  description: ClawX is a graphical AI assistant application that integrates with OpenClaw Gateway to provide intelligent automation and assistance across multiple messaging platforms.
+  maintainer: AutoTest X Team <public@autotestx.ai>
+  vendor: AutoTest X
+  synopsis: AI-Powered UI Automation Platform
+  description: AutoTest X is a graphical AI automation platform that integrates with OpenClaw Gateway to provide intelligent testing and automation.
   desktop:
     entry:
-      Name: ClawX
-      Comment: AI Assistant powered by OpenClaw
+      Name: AutoTest X
+      Comment: AI-Powered UI Automation Platform
       Categories: Utility;Network;
-      Keywords: ai;assistant;automation;chat;
-      StartupWMClass: clawx
+      Keywords: ai;automation;testing;
+      StartupWMClass: autotestx
 
 appImage:
   license: LICENSE

@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settings';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import logoSvg from '@/assets/logo.svg';
+import logoPng from '@/assets/logo.png';
 
 interface NavItemProps {
   to: string;
@@ -89,7 +89,7 @@ export function Sidebar() {
         {!sidebarCollapsed && (
           <div className="flex items-center gap-3 px-2 overflow-hidden select-none">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-primary/80 to-primary text-primary-foreground shadow-sm">
-              <img src={logoSvg} alt="AutoTestX" className="h-5 w-auto shrink-0 invert brightness-0" />
+              <img src={logoPng} alt="AutoTestX" className="h-5 w-auto shrink-0" />
             </div>
             <span className="text-lg font-bold tracking-tight truncate whitespace-nowrap text-foreground">
               AutoTestX

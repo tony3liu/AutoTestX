@@ -20,6 +20,13 @@ const TRANSIENT_START_ERROR_PATTERNS: RegExp[] = [
   /Connect handshake timeout/i,
 ];
 
+const PORT_CONFLICT_PATTERNS: RegExp[] = [
+  /EADDRINUSE/i,
+  /Port \d+ is already in use/i,
+  /gateway token mismatch/i,
+  /unauthorized: gateway token mismatch/i,
+];
+
 function normalizeLogLine(value: string): string {
   return value.trim();
 }
@@ -73,7 +80,26 @@ export function isTransientGatewayStartError(error: unknown): boolean {
   return TRANSIENT_START_ERROR_PATTERNS.some((pattern) => pattern.test(errorText));
 }
 
-export type GatewayStartupRecoveryAction = 'repair' | 'retry' | 'fail';
+export function isPortConflictError(error: unknown, stderrLines: string[]): boolean {
+  const errorText = error instanceof Error
+    ? `${error.name}: ${error.message}`
+    : String(error ?? '');
+  
+  if (PORT_CONFLICT_PATTERNS.some((pattern) => pattern.test(errorText))) {
+    return true;
+  }
+  
+  for (const line of stderrLines) {
+    const normalized = normalizeLogLine(line);
+    if (normalized && PORT_CONFLICT_PATTERNS.some((pattern) => pattern.test(normalized))) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+export type GatewayStartupRecoveryAction = 'repair' | 'retry' | 'switch-port' | 'fail';
 
 export function getGatewayStartupRecoveryAction(options: {
   startupError: unknown;
@@ -90,8 +116,14 @@ export function getGatewayStartupRecoveryAction(options: {
     return 'repair';
   }
 
-  if (options.attempt < options.maxAttempts && isTransientGatewayStartError(options.startupError)) {
-    return 'retry';
+  if (options.attempt < options.maxAttempts) {
+    if (isPortConflictError(options.startupError, options.startupStderrLines)) {
+      return 'switch-port';
+    }
+    
+    if (isTransientGatewayStartError(options.startupError)) {
+      return 'retry';
+    }
   }
 
   return 'fail';

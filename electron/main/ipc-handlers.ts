@@ -59,7 +59,7 @@ import {
 } from '../services/providers/provider-runtime-sync';
 import { validateApiKeyWithProvider } from '../services/providers/provider-validation';
 import { appUpdater } from './updater';
-import { PORTS } from '../utils/config';
+import { getRuntimeHostApiPort } from '../utils/config';
 
 type AppRequest = {
   id?: string;
@@ -323,7 +323,7 @@ function registerHostApiProxyHandlers(): void {
         }
       }
 
-      const response = await proxyAwareFetch(`http://127.0.0.1:${PORTS.CLAWX_HOST_API}${path}`, {
+      const response = await proxyAwareFetch(`http://127.0.0.1:${getRuntimeHostApiPort()}${path}`, {
         method,
         headers,
         body,
@@ -1064,7 +1064,7 @@ function registerCronHandlers(gatewayManager: GatewayManager): void {
   });
 
   // Create a new cron job
-  // UI-created tasks have no delivery target — results go to the ClawX chat page.
+  // UI-created tasks have no delivery target — results go to the AutoTest X chat page.
   // Tasks created via external channels (Feishu, Discord, etc.) are handled
   // directly by the OpenClaw Gateway and do not pass through this IPC handler.
   ipcMain.handle('cron:create', async (_, input: {
@@ -1081,7 +1081,7 @@ function registerCronHandlers(gatewayManager: GatewayManager): void {
         enabled: input.enabled ?? true,
         wakeMode: 'next-heartbeat',
         sessionTarget: 'isolated',
-        // UI-created jobs deliver results via ClawX WebSocket chat events,
+        // UI-created jobs deliver results via AutoTest X WebSocket chat events,
         // not external messaging channels.  Setting mode='none' prevents
         // the Gateway from attempting channel delivery (which would fail
         // with "Channel is required" when no channels are configured).
@@ -2113,7 +2113,7 @@ function registerProviderHandlers(gatewayManager: GatewayManager): void {
         const resolvedBaseUrl = options?.baseUrl || provider?.baseUrl || registryBaseUrl;
         const resolvedProtocol = options?.apiProtocol || provider?.apiProtocol;
 
-        console.log(`[clawx-validate] validating provider type: ${providerType}`);
+        console.log(`[autotestx-validate] validating provider type: ${providerType}`);
         return await validateApiKeyWithProvider(providerType, apiKey, {
           baseUrl: resolvedBaseUrl,
           apiProtocol: resolvedProtocol,
@@ -2246,6 +2246,11 @@ function registerAppHandlers(): void {
   // Get platform
   ipcMain.handle('app:platform', () => {
     return process.platform;
+  });
+
+  // Get current host API port
+  ipcMain.handle('app:getHostApiPort', () => {
+    return getRuntimeHostApiPort();
   });
 
   // Quit app

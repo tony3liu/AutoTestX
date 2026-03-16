@@ -38,10 +38,18 @@ const routeHandlers: RouteHandler[] = [
   handleUsageRoutes,
 ];
 
-export function startHostApiServer(ctx: HostApiContext, port = PORTS.CLAWX_HOST_API): Server {
+export async function startHostApiServer(
+  ctx: HostApiContext,
+  initialPort = PORTS.AUTOTESTX_HOST_API,
+): Promise<{ server: Server; port: number }> {
+  let port = initialPort;
+  const maxPort = initialPort + 10;
+
   const server = createServer(async (req, res) => {
     try {
-      const requestUrl = new URL(req.url || '/', `http://127.0.0.1:${port}`);
+      // Use the actual port in the URL for internal consistency
+      const host = req.headers.host || `127.0.0.1:${port}`;
+      const requestUrl = new URL(req.url || '/', `http://${host}`);
       for (const handler of routeHandlers) {
         if (await handler(req, res, requestUrl, ctx)) {
           return;
@@ -54,9 +62,34 @@ export function startHostApiServer(ctx: HostApiContext, port = PORTS.CLAWX_HOST_
     }
   });
 
-  server.listen(port, '127.0.0.1', () => {
-    logger.info(`Host API server listening on http://127.0.0.1:${port}`);
-  });
+  const listen = (p: number): Promise<number> => {
+    return new Promise((resolve, reject) => {
+      const onListening = () => {
+        server.removeListener('error', onError);
+        logger.info(`Host API server listening on http://127.0.0.1:${p}`);
+        resolve(p);
+      };
 
-  return server;
+      const onError = (err: any) => {
+        server.removeListener('listening', onListening);
+        if (err.code === 'EADDRINUSE') {
+          if (p < maxPort) {
+            logger.warn(`Port ${p} in use, trying ${p + 1}...`);
+            resolve(listen(p + 1));
+          } else {
+            reject(new Error(`Could not find an available port between ${initialPort} and ${maxPort}`));
+          }
+        } else {
+          reject(err);
+        }
+      };
+
+      server.once('listening', onListening);
+      server.once('error', onError);
+      server.listen(p, '127.0.0.1');
+    });
+  };
+
+  const actualPort = await listen(port);
+  return { server, port: actualPort };
 }
