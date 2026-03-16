@@ -16,6 +16,7 @@ interface TestState {
 
   // Actions
   fetchTestCases: () => Promise<void>;
+  fetchTestReports: () => Promise<void>;
   createTestCase: (testCase: Omit<TestCase, 'createdAt'>) => Promise<TestCase>;
   
   // Future Actions
@@ -41,6 +42,16 @@ export const useTestStore = create<TestState>((set) => ({
       set({ testCases: cases, isLoading: false });
     } catch (err: any) {
       set({ error: err.message || 'Failed to fetch test cases', isLoading: false });
+    }
+  },
+
+  fetchTestReports: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const reports = await invokeIpc<TestResult[]>('test:listReports');
+      set({ testReports: reports, isLoading: false });
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to fetch test reports', isLoading: false });
     }
   },
 

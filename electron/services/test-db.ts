@@ -37,12 +37,34 @@ class TestDbService {
       
       CREATE TABLE IF NOT EXISTS test_reports (
         id TEXT PRIMARY KEY,
-        suite_id TEXT,
-        results TEXT,
+        case_id TEXT,
         status TEXT,
+        error TEXT,
+        duration REAL,
+        screenshots TEXT,
+        logs TEXT,
         created_at INTEGER
       );
     `);
+    
+    // Quick migration trick for development: check if case_id exists, if not recreate
+    try {
+      this.db.prepare('SELECT case_id FROM test_reports LIMIT 1').get();
+    } catch {
+      this.db.exec('DROP TABLE test_reports');
+      this.db.exec(`
+        CREATE TABLE test_reports (
+          id TEXT PRIMARY KEY,
+          case_id TEXT,
+          status TEXT,
+          error TEXT,
+          duration REAL,
+          screenshots TEXT,
+          logs TEXT,
+          created_at INTEGER
+        );
+      `);
+    }
   }
 
   public getDb(): Database.Database {

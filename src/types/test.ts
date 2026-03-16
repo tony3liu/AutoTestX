@@ -13,14 +13,19 @@ export interface Assertion {
   timeout?: number;
 }
 
-export interface TestResult {
+export interface OmitTestResult {
   caseId: string;
   status: 'pass' | 'fail' | 'error';
   duration: number;
   screenshots: string[];
   logs: string[];
   error?: string;
+  reportId?: string;
+  createdAt?: number;
+  test_case_name?: string;
 }
+
+export type TestResult = OmitTestResult;
 
 export interface TestSuite {
   id: string;

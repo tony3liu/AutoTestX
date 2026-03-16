@@ -219,7 +219,24 @@ function registerTestHandlers(): void {
       now
     );
 
+
     return { ...result, reportId, createdAt: now };
+  });
+
+  ipcMain.handle('test:listReports', async () => {
+    // Join with test_cases to get the names
+    const stmt = testDb.getDb().prepare(`
+      SELECT r.*, c.name as test_case_name
+      FROM test_reports r
+      LEFT JOIN test_cases c ON r.case_id = c.id
+      ORDER BY r.created_at DESC
+    `);
+    const rows = stmt.all() as any[];
+    return rows.map(row => ({
+      ...row,
+      screenshots: JSON.parse(row.screenshots || '[]'),
+      logs: JSON.parse(row.logs || '[]')
+    }));
   });
 }
 

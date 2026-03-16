@@ -141,6 +141,7 @@ const electronAPI = {
         'test:createCase',
         'test:listCases',
         'test:run',
+        'test:listReports',
       ];
 
       if (validChannels.includes(channel)) {
