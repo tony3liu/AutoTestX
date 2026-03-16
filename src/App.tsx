@@ -9,12 +9,9 @@ import { Toaster } from 'sonner';
 import i18n from './i18n';
 import { MainLayout } from './components/layout/MainLayout';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { Models } from './pages/Models';
-import { Chat } from './pages/Chat';
-import { Agents } from './pages/Agents';
-import { Channels } from './pages/Channels';
-import { Skills } from './pages/Skills';
-import { Cron } from './pages/Cron';
+import { Dashboard } from './pages/dashboard';
+import { TestCases } from './pages/test-cases';
+import { Reports } from './pages/reports';
 import { Settings } from './pages/Settings';
 import { Setup } from './pages/Setup';
 import { useSettingsStore } from './stores/settings';
@@ -164,12 +161,10 @@ function App() {
 
           {/* Main application routes */}
           <Route element={<MainLayout />}>
-            <Route path="/" element={<Chat />} />
-            <Route path="/models" element={<Models />} />
-            <Route path="/agents" element={<Agents />} />
-            <Route path="/channels" element={<Channels />} />
-            <Route path="/skills" element={<Skills />} />
-            <Route path="/cron" element={<Cron />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/test-cases" element={<TestCases />} />
+            <Route path="/reports" element={<Reports />} />
             <Route path="/settings/*" element={<Settings />} />
           </Route>
         </Routes>
