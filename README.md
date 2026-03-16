@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img src="src/assets/logo.svg" width="128" height="128" alt="AutoTestX Logo" />
+  <img src="src/assets/logo.png" width="128" height="128" alt="AutoTestX Logo" />
   <h1>AutoTestX</h1>
   <p><strong>Minimalist · LLM-Powered · Redefining UI Automation</strong></p>
   <p>

@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img src="src/assets/logo.svg" width="128" height="128" alt="AutoTestX Logo" />
+  <img src="src/assets/logo.png" width="128" height="128" alt="AutoTestX Logo" />
   <h1>AutoTestX</h1>
   <p><strong>极简主义 · 大模型驱动 · 重新定义 UI 自动化测试</strong></p>
   <p>
