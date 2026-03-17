@@ -22,7 +22,7 @@ function ReportItem({ report }: { report: TestResult }) {
 
   return (
     <div className="border border-border/40 rounded-lg overflow-hidden mb-3 bg-secondary/5 transition-all">
-      <div 
+      <div
         className="flex items-center justify-between p-3 cursor-pointer hover:bg-secondary/10"
         onClick={() => setExpanded(!expanded)}
       >
@@ -45,15 +45,15 @@ function ReportItem({ report }: { report: TestResult }) {
               <strong>错误：</strong> {report.error}
             </div>
           )}
-          
+
           {report.failureReason && (
             <div className="space-y-2">
               <div className="p-4 rounded-md bg-amber-500/10 border border-amber-500/20">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-[12px] font-semibold text-amber-500 flex items-center gap-2">
-                    <AlertCircle className="w-3 h-3" /> 判定失败原因 (Judge Reasoning)
+                    <AlertCircle className="w-3 h-3" /> 判定理由 (Judge Reasoning)
                   </h4>
-                  <button 
+                  <button
                     onClick={async (e) => {
                       e.stopPropagation();
                       const btn = e.currentTarget;
@@ -77,10 +77,10 @@ function ReportItem({ report }: { report: TestResult }) {
                   {report.failureReason}
                 </p>
                 {translatedReason && (
-                   <div className="mt-3 pt-3 border-t border-amber-500/10 text-[12px] text-foreground leading-relaxed animate-in fade-in slide-in-from-top-1">
-                      <div className="font-semibold mb-1">🔍 中文解释：</div>
-                      {translatedReason}
-                   </div>
+                  <div className="mt-3 pt-3 border-t border-amber-500/10 text-[12px] text-foreground leading-relaxed animate-in fade-in slide-in-from-top-1">
+                    <div className="font-semibold mb-1">🔍 中文解释：</div>
+                    {translatedReason}
+                  </div>
                 )}
               </div>
             </div>
@@ -164,8 +164,8 @@ export function Reports() {
           {testTasks.map((task: TestTask) => {
             const details = taskDetails[task.id];
             const isExpanded = expandedTaskId === task.id;
-            const progress = task.totalCount > 0 
-              ? ((task.passCount + task.failCount + task.errorCount) / task.totalCount) * 100 
+            const progress = task.totalCount > 0
+              ? ((task.passCount + task.failCount + task.errorCount) / task.totalCount) * 100
               : 0;
 
             return (
@@ -174,16 +174,16 @@ export function Reports() {
                 isExpanded && "ring-1 ring-primary/20 shadow-md"
               )}>
                 <CardHeader className="p-0">
-                  <div 
+                  <div
                     className="p-5 flex items-center justify-between cursor-pointer hover:bg-secondary/10 active:bg-secondary/20 transition-colors"
                     onClick={() => toggleTask(task.id)}
                   >
                     <div className="flex items-center gap-4">
                       <div className={cn(
                         "p-2 rounded-full",
-                        task.status === 'completed' ? "bg-green-500/10 text-green-500" : 
-                        task.status === 'failed' ? "bg-red-500/10 text-red-500" : 
-                        "bg-blue-500/10 text-blue-500"
+                        task.status === 'completed' ? "bg-green-500/10 text-green-500" :
+                          task.status === 'failed' ? "bg-red-500/10 text-red-500" :
+                            "bg-blue-500/10 text-blue-500"
                       )}>
                         {task.suiteId ? <List className="w-5 h-5" /> : <Terminal className="w-5 h-5" />}
                       </div>
@@ -196,30 +196,30 @@ export function Reports() {
                     </div>
 
                     <div className="flex items-center gap-8">
-                       <div className="hidden md:flex flex-col items-end gap-1 min-w-[120px]">
-                          <div className="flex gap-3 text-xs font-medium">
-                            <span className="text-green-500">P: {task.passCount}</span>
-                            <span className="text-red-500">F: {task.failCount}</span>
-                            {task.errorCount > 0 && <span className="text-orange-500">E: {task.errorCount}</span>}
-                          </div>
-                          <Progress value={progress} className="h-1.5 w-full bg-secondary" />
-                       </div>
-                       <StatusBadge status={task.status} />
-                       {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+                      <div className="hidden md:flex flex-col items-end gap-1 min-w-[120px]">
+                        <div className="flex gap-3 text-xs font-medium">
+                          <span className="text-green-500">P: {task.passCount}</span>
+                          <span className="text-red-500">F: {task.failCount}</span>
+                          {task.errorCount > 0 && <span className="text-orange-500">E: {task.errorCount}</span>}
+                        </div>
+                        <Progress value={progress} className="h-1.5 w-full bg-secondary" />
+                      </div>
+                      <StatusBadge status={task.status} />
+                      {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 {isExpanded && (
                   <CardContent className="pt-0 pb-6 px-6">
                     <div className="border-t border-border/40 pt-6 space-y-4">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="text-sm font-semibold flex items-center gap-2">
-                           <List className="w-4 h-4 text-muted-foreground" />
-                           执行明细 ({task.totalCount})
+                          <List className="w-4 h-4 text-muted-foreground" />
+                          执行明细 ({task.totalCount})
                         </h4>
                       </div>
-                      
+
                       {!details ? (
                         <div className="flex justify-center py-8"><Activity className="animate-spin w-6 h-6 text-primary" /></div>
                       ) : details.reports && details.reports.length > 0 ? (

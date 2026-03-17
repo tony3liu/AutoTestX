@@ -52,7 +52,6 @@ import { applyProxySettings } from './proxy';
 import { syncLaunchAtStartupSettingFromStore } from './launch-at-startup';
 import { proxyAwareFetch } from '../utils/proxy-fetch';
 import { getRecentTokenUsageHistory } from '../utils/token-usage';
-import { getProviderService } from '../services/providers/provider-service';
 import {
   getOpenClawProviderKey,
   syncDefaultProviderToRuntime,
@@ -161,8 +160,7 @@ export function registerIpcHandlers(
   registerScheduleHandlers();
 }
 
-import { testDb } from '../services/test-db';
-import { testJobService } from '../services/test-job';
+
 
 function registerTestHandlers(): void {
   ipcMain.handle('test:createCase', async (_, testCase: any) => {
@@ -358,12 +356,12 @@ function registerTestHandlers(): void {
       
       const llm = new ChatOpenAI({
         model: account?.model || 'gpt-4o',
-        apiKey: apiKey,
+        apiKey: apiKey || undefined,
         baseURL: account?.baseUrl,
       });
 
       const response = await llm.ainvoke([
-        new SystemMessage('你是一个专业的自动化测试专家。请将下面的测试失败原因（Failure Reason）翻译并解释成中文，要求通俗易懂，指明可能的问题所在。直接给出中文内容。'),
+        new SystemMessage('你是一个专业的自动化测试专家。请将下面的判定理由（Decision Reasoning）翻译并解释成中文，要求通俗易懂，指明判定依据。直接给出中文内容。'),
         new UserMessage(text)
       ]);
       

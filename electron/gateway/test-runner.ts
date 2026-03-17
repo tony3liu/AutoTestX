@@ -21,10 +21,21 @@ export class TestRunner {
     let duration = 0;
 
     try {
+      const verificationGuideline = `
+[Verification Guidelines]
+- 优先考虑【语义正确性】和【页面证据】，而非文本的 100% 精确匹配。
+- 【视觉识别容错】：由于使用 OCR 视觉识别，中文容易出现字形相似（如“渴/喝”）、读音相似（如“曦/希”）或分词误差。
+- 如果识别出的文字在字形、读音或中文语境下高度相似，且根据页面位置能确认是同一个元素，必须判定为【匹配成功】。
+- 关注【业务流程】：如果按钮已点击、页面已跳转或核心数据已呈现，不要因为微小的视觉识别偏差而判定失败。
+- 对于数量要求（如“前3个”），需严格核对数量。
+- 在判定失败前，请结合 DOM 原始文本和视觉截图进行“二次确认”，排除由于 OCR 误读导致的“假阴性”失败。
+`;
+
       const combinedTask = [
         ...testCase.steps,
         "Please verify the following assertions:",
-        ...testCase.assertions.map((a: any) => `- ${a.expected}`)
+        ...testCase.assertions.map((a: any) => `- ${a.expected}`),
+        verificationGuideline
       ].join('\n');
 
       // Fetch the API key and model from the provider service
