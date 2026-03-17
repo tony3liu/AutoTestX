@@ -19,6 +19,11 @@ import {
   saveProviderKeyToOpenClaw,
   removeProviderFromOpenClaw,
 } from '../utils/openclaw-auth';
+import { getProviderService } from '../services/providers/provider-service';
+import { testDb } from '../services/test-db';
+import { testJobService } from '../services/test-job';
+import { ChatOpenAI } from 'browser-use/llm/openai';
+import { SystemMessage, UserMessage } from 'browser-use/llm/messages';
 import { buildOpenClawControlUiUrl } from '../utils/openclaw-control-ui';
 import { logger } from '../utils/logger';
 import {
@@ -157,7 +162,7 @@ export function registerIpcHandlers(
 }
 
 import { testDb } from '../services/test-db';
-import { testRunner } from '../gateway/test-runner';
+import { testJobService } from '../services/test-job';
 
 function registerTestHandlers(): void {
   ipcMain.handle('test:createCase', async (_, testCase: any) => {
@@ -213,62 +218,161 @@ function registerTestHandlers(): void {
     }));
   });
 
-  ipcMain.handle('test:run', async (_, testCaseId: string) => {
-    // 1. Fetch test case from DB
-    const stmt = testDb.getDb().prepare('SELECT * FROM test_cases WHERE id = ?');
-    const row = stmt.get(testCaseId) as any;
-    if (!row) {
-      throw new Error(`Test case not found: ${testCaseId}`);
-    }
-
-    const testCase = {
-      ...row,
-      steps: JSON.parse(row.steps || '[]'),
-      assertions: JSON.parse(row.assertions || '[]'),
-      modelId: row.model_id,
-      accountId: row.vendor_id
-    };
-
-    // 2. Run the test with BrowserUse agent via TestRunner
-    const result = await testRunner.runTest(testCase);
-
-    // 3. Save the result to DB
-    const insertStmt = testDb.getDb().prepare(`
-      INSERT INTO test_reports (id, case_id, status, error, duration, screenshots, logs, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    const reportId = crypto.randomUUID();
-    const now = Date.now();
-    
-    insertStmt.run(
-      reportId,
-      result.caseId,
-      result.status,
-      result.error || null,
-      result.duration,
-      JSON.stringify(result.screenshots || []),
-      JSON.stringify(result.logs || []),
-      now
-    );
-
-
-    return { ...result, reportId, createdAt: now };
-  });
-
-  ipcMain.handle('test:listReports', async () => {
-    // Join with test_cases to get the names
-    const stmt = testDb.getDb().prepare(`
-      SELECT r.*, c.name as test_case_name
-      FROM test_reports r
-      LEFT JOIN test_cases c ON r.case_id = c.id
-      ORDER BY r.created_at DESC
-    `);
+  // Suite Handlers
+  ipcMain.handle('test:listSuites', async () => {
+    const stmt = testDb.getDb().prepare('SELECT * FROM test_suites ORDER BY created_at DESC');
     const rows = stmt.all() as any[];
     return rows.map(row => ({
       ...row,
-      screenshots: JSON.parse(row.screenshots || '[]'),
-      logs: JSON.parse(row.logs || '[]')
+      testCaseIds: JSON.parse(row.case_ids || '[]'),
+      concurrency: row.concurrency,
+      retryOnFail: row.retry_on_fail
     }));
+  });
+
+  ipcMain.handle('test:createSuite', async (_, suite: any) => {
+    const stmt = testDb.getDb().prepare(`
+      INSERT INTO test_suites (id, name, description, case_ids, concurrency, retry_on_fail, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    const now = Date.now();
+    stmt.run(
+      suite.id, 
+      suite.name, 
+      suite.description || null, 
+      JSON.stringify(suite.testCaseIds || []), 
+      suite.concurrency || 1,
+      suite.retryOnFail || 0,
+      now
+    );
+    return { ...suite, createdAt: now };
+  });
+
+  ipcMain.handle('test:updateSuite', async (_, suite: any) => {
+    const stmt = testDb.getDb().prepare(`
+      UPDATE test_suites 
+      SET name = ?, description = ?, case_ids = ?, concurrency = ?, retry_on_fail = ? 
+      WHERE id = ?
+    `);
+    stmt.run(
+      suite.name, 
+      suite.description || null, 
+      JSON.stringify(suite.testCaseIds || []), 
+      suite.concurrency || 1,
+      suite.retryOnFail || 0,
+      suite.id
+    );
+    return suite;
+  });
+
+  ipcMain.handle('test:deleteSuite', async (_, id: string) => {
+    testDb.getDb().prepare('DELETE FROM test_suites WHERE id = ?').run(id);
+    return { success: true };
+  });
+
+  // Unified Task-based run handler
+  ipcMain.handle('test:run', async (_, testCaseId: string) => {
+    return testJobService.runTestCase(testCaseId);
+  });
+
+  ipcMain.handle('test:runSuite', async (_, suiteId: string) => {
+    return testJobService.runSuite(suiteId);
+  });
+
+  ipcMain.handle('test:listTasks', async () => {
+    const tasks = testDb.getDb().prepare('SELECT * FROM test_tasks ORDER BY created_at DESC LIMIT 50').all() as any[];
+    return tasks.map(t => ({
+      id: t.id,
+      name: t.name,
+      suiteId: t.suite_id,
+      status: t.status,
+      totalCount: t.total_count,
+      passCount: t.pass_count,
+      failCount: t.fail_count,
+      errorCount: t.error_count,
+      createdAt: t.created_at
+    }));
+  });
+
+  ipcMain.handle('test:getTaskDetails', async (_, taskId: string) => {
+    const t = testDb.getDb().prepare('SELECT * FROM test_tasks WHERE id = ?').get(taskId) as any;
+    if (!t) return null;
+    
+    const task = {
+      id: t.id,
+      name: t.name,
+      suiteId: t.suite_id,
+      status: t.status,
+      totalCount: t.total_count,
+      passCount: t.pass_count,
+      failCount: t.fail_count,
+      errorCount: t.error_count,
+      createdAt: t.created_at
+    };
+    
+    const reports = testDb.getDb().prepare(`
+      SELECT r.*, c.name as test_case_name 
+      FROM test_reports r
+      LEFT JOIN test_cases c ON r.case_id = c.id
+      WHERE r.task_id = ? 
+      ORDER BY r.created_at ASC
+    `).all(taskId);
+    
+    return {
+      ...task,
+      reports: (reports as any[]).map(r => ({
+        ...r,
+        reportId: r.id, // Map database id to reportId
+        steps: JSON.parse(r.steps || '[]'),
+        assertions: JSON.parse(r.assertions || '[]'),
+        screenshots: JSON.parse(r.screenshots || '[]'),
+        logs: JSON.parse(r.logs || '[]'),
+        failureReason: r.failure_reason
+      }))
+    };
+  });
+
+  ipcMain.handle('test:listReports', async () => {
+    const rows = testDb.getDb().prepare(`
+      SELECT r.*, c.name as test_case_name, t.name as task_name FROM test_reports r
+      LEFT JOIN test_cases c ON r.case_id = c.id
+      LEFT JOIN test_tasks t ON r.task_id = t.id
+      ORDER BY r.created_at DESC
+    `).all() as any[];
+    return rows.map(row => ({ 
+      ...row, 
+      screenshots: JSON.parse(row.screenshots || '[]'), 
+      logs: JSON.parse(row.logs || '[]'),
+      failureReason: row.failure_reason
+    }));
+  });
+
+  ipcMain.handle('test:translateReason', async (_, text: string) => {
+    try {
+      const providerService = getProviderService();
+      let defaultAccountId = await providerService.getDefaultAccountId();
+      if (!defaultAccountId) throw new Error('No default AI provider configured for translation');
+      
+      const account = await providerService.getAccount(defaultAccountId);
+      const apiKey = await providerService.getLegacyProviderApiKey(defaultAccountId);
+      
+      const llm = new ChatOpenAI({
+        model: account?.model || 'gpt-4o',
+        apiKey: apiKey,
+        baseURL: account?.baseUrl,
+      });
+
+      const response = await llm.ainvoke([
+        new SystemMessage('你是一个专业的自动化测试专家。请将下面的测试失败原因（Failure Reason）翻译并解释成中文，要求通俗易懂，指明可能的问题所在。直接给出中文内容。'),
+        new UserMessage(text)
+      ]);
+      
+      const content = response.completion || '';
+      return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    } catch (err: any) {
+      console.error('Translation failed:', err);
+      return `翻译失败: ${err.message}`;
+    }
   });
 }
 

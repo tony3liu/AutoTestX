@@ -90,9 +90,23 @@ export class TestRunner {
         }),
         `Final result: ${finalResult || 'None'}`,
       ];
+
+      const judgement = history.judgement() as any;
+      let failureReason = undefined;
+      let isValidated = null;
+      
+      if (judgement) {
+        failureReason = judgement.failure_reason || judgement.reasoning || judgement.reason;
+        if (judgement.verdict !== undefined) {
+          isValidated = judgement.verdict === true;
+        }
+      }
       
       duration = history.total_duration_seconds() || (Date.now() - startTime) / 1000;
-      status = isSuccessful ? 'pass' : (agentErrors.length > 0 ? 'error' : 'fail');
+      
+      // Determine real status: if judge exists and says false, it's failed regardless of agent claim
+      const finalPass = isValidated !== null ? isValidated : isSuccessful;
+      status = finalPass ? 'pass' : (agentErrors.length > 0 ? 'error' : 'fail');
       error = agentErrors.length > 0 ? agentErrors.join('; ') : undefined;
 
       return {
@@ -102,6 +116,7 @@ export class TestRunner {
         screenshots: [], // Future: fetch from history.screenshot_paths()
         logs,
         error,
+        failureReason,
       };
     } catch (e: any) {
       logger.error(`Error running test case: ${e.message}`);

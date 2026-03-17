@@ -84,13 +84,17 @@ const electronAPI = {
         'provider:validateKey',
         'provider:requestOAuth',
         'provider:cancelOAuth',
-        // Cron
+        // Cron / Schedule
         'cron:list',
         'cron:create',
         'cron:update',
         'cron:delete',
         'cron:toggle',
         'cron:trigger',
+        'test:listSchedules',
+        'test:createSchedule',
+        'test:updateSchedule',
+        'test:deleteSchedule',
         // Channel Config
         'channel:saveConfig',
         'channel:getConfig',
@@ -139,9 +143,19 @@ const electronAPI = {
         'openclaw:getCliCommand',
         // Test Management
         'test:createCase',
+        'test:updateCase',
+        'test:deleteCase',
         'test:listCases',
         'test:run',
         'test:listReports',
+        'test:listSuites',
+        'test:createSuite',
+        'test:updateSuite',
+        'test:deleteSuite',
+        'test:runSuite',
+        'test:listTasks',
+        'test:getTaskDetails',
+        'test:translateReason',
       ];
 
       if (validChannels.includes(channel)) {

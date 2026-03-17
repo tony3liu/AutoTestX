@@ -4,7 +4,8 @@ import { invokeIpc } from '@/lib/api-client';
 export interface TestSchedule {
   id: string;
   name: string;
-  testCaseId: string;
+  testCaseId?: string;
+  testSuiteId?: string;
   cronExpr: string;
   enabled: boolean;
   lastRunAt?: number;

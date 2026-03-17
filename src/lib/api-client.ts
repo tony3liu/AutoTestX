@@ -1061,3 +1061,31 @@ export async function invokeIpcWithRetry<T>(
 
   throw normalizeAppError(lastError);
 }
+
+// Test API Wrappers
+export const testApi = {
+  // Cases
+  listCases: () => invokeApi<any[]>('test:listCases'),
+  createCase: (testCase: any) => invokeApi<any>('test:createCase', testCase),
+  updateCase: (testCase: any) => invokeApi<any>('test:updateCase', testCase),
+  deleteCase: (id: string) => invokeApi<any>('test:deleteCase', id),
+  runTest: (caseId: string) => invokeApi<any>('test:run', caseId),
+
+  // Suites
+  listSuites: () => invokeApi<any[]>('test:listSuites'),
+  createSuite: (suite: any) => invokeApi<any>('test:createSuite', suite),
+  updateSuite: (suite: any) => invokeApi<any>('test:updateSuite', suite),
+  deleteSuite: (id: string) => invokeApi<any>('test:deleteSuite', id),
+  runSuite: (suiteId: string) => invokeApi<{ taskId: string }>('test:runSuite', suiteId),
+
+  // Tasks / Reports
+  listTasks: () => invokeApi<any[]>('test:listTasks'),
+  getTaskDetails: (taskId: string) => invokeApi<any>('test:getTaskDetails', taskId),
+  listReports: () => invokeApi<any[]>('test:listReports'),
+
+  // Schedules
+  listSchedules: () => invokeApi<any[]>('test:listSchedules'),
+  createSchedule: (schedule: any) => invokeApi<any>('test:createSchedule', schedule),
+  updateSchedule: (id: string, patch: any) => invokeApi<any>('test:updateSchedule', id, patch),
+  deleteSchedule: (id: string) => invokeApi<any>('test:deleteSchedule', id),
+};

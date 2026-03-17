@@ -1,40 +1,51 @@
 import { create } from 'zustand';
 import { invokeIpc } from '@/lib/api-client';
-import type { TestCase, TestSuite, TestResult } from '@/types/test';
+import type { TestCase, TestSuite, TestResult, TestTask } from '@/types/test';
 
 interface TestState {
   // Data
   testCases: TestCase[];
   testSuites: TestSuite[];
   testReports: TestResult[];
+  testTasks: TestTask[];
   
   // Loading States
   isLoading: boolean;
   isSaving: boolean;
   runningTestCaseId: string | null;
+  runningSuiteId: string | null;
   error: string | null;
 
   // Actions
   fetchTestCases: () => Promise<void>;
   fetchTestReports: () => Promise<void>;
-  createTestCase: (testCase: Omit<TestCase, 'createdAt'>) => Promise<TestCase>;
+  fetchTestSuites: () => Promise<void>;
+  fetchTestTasks: () => Promise<void>;
   
-  // Future Actions
-  fetchTestSuites?: () => Promise<void>;
-  createTestSuite?: (suite: Omit<TestSuite, 'createdAt'>) => Promise<TestSuite>;
-  runTest: (testCaseId: string) => Promise<TestResult>;
+  createTestCase: (testCase: Omit<TestCase, 'createdAt'>) => Promise<TestCase>;
   updateTestCase: (testCase: TestCase) => Promise<TestCase>;
   deleteTestCase: (id: string) => Promise<void>;
+  
+  createTestSuite: (suite: Omit<TestSuite, 'createdAt'>) => Promise<TestSuite>;
+  updateTestSuite: (suite: TestSuite) => Promise<TestSuite>;
+  deleteTestSuite: (id: string) => Promise<void>;
+  
+  runTest: (testCaseId: string) => Promise<TestResult>;
+  runSuite: (suiteId: string) => Promise<{ taskId: string }>;
+  fetchTaskDetails: (taskId: string) => Promise<TestTask>;
+  translateReason: (text: string) => Promise<string>;
 }
 
-export const useTestStore = create<TestState>((set) => ({
+export const useTestStore = create<TestState>((set, get) => ({
   testCases: [],
   testSuites: [],
   testReports: [],
+  testTasks: [],
   
   isLoading: false,
   isSaving: false,
   runningTestCaseId: null,
+  runningSuiteId: null,
   error: null,
 
   fetchTestCases: async () => {
@@ -54,6 +65,26 @@ export const useTestStore = create<TestState>((set) => ({
       set({ testReports: reports, isLoading: false });
     } catch (err: any) {
       set({ error: err.message || 'Failed to fetch test reports', isLoading: false });
+    }
+  },
+
+  fetchTestSuites: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const suites = await invokeIpc<TestSuite[]>('test:listSuites');
+      set({ testSuites: suites, isLoading: false });
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to fetch suites', isLoading: false });
+    }
+  },
+
+  fetchTestTasks: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const tasks = await invokeIpc<TestTask[]>('test:listTasks');
+      set({ testTasks: tasks, isLoading: false });
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to fetch tasks', isLoading: false });
     }
   },
 
@@ -101,6 +132,50 @@ export const useTestStore = create<TestState>((set) => ({
     }
   },
 
+  createTestSuite: async (suite) => {
+    try {
+      set({ isSaving: true, error: null });
+      const created = await invokeIpc<TestSuite>('test:createSuite', suite);
+      set((state) => ({ 
+        testSuites: [created, ...state.testSuites],
+        isSaving: false 
+      }));
+      return created;
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to create suite', isSaving: false });
+      throw err;
+    }
+  },
+
+  updateTestSuite: async (suite) => {
+    try {
+      set({ isSaving: true, error: null });
+      const updated = await invokeIpc<TestSuite>('test:updateSuite', suite);
+      set((state) => ({
+        testSuites: state.testSuites.map((s) => (s.id === updated.id ? updated : s)),
+        isSaving: false,
+      }));
+      return updated;
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to update suite', isSaving: false });
+      throw err;
+    }
+  },
+
+  deleteTestSuite: async (id: string) => {
+    try {
+      set({ isSaving: true, error: null });
+      await invokeIpc('test:deleteSuite', id);
+      set((state) => ({
+        testSuites: state.testSuites.filter((s) => s.id !== id),
+        isSaving: false,
+      }));
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to delete suite', isSaving: false });
+      throw err;
+    }
+  },
+
   runTest: async (testCaseId: string) => {
     try {
       set({ runningTestCaseId: testCaseId, error: null });
@@ -109,10 +184,38 @@ export const useTestStore = create<TestState>((set) => ({
         testReports: [result, ...state.testReports],
         runningTestCaseId: null
       }));
+      get().fetchTestTasks(); // Refresh tasks list
       return result;
     } catch (err: any) {
       set({ error: err.message || 'Failed to run test', runningTestCaseId: null });
       throw err;
     }
+  },
+
+  runSuite: async (suiteId: string) => {
+    try {
+      set({ runningSuiteId: suiteId, error: null });
+      const result = await invokeIpc<{ taskId: string }>('test:runSuite', suiteId);
+      set({ runningSuiteId: null });
+      get().fetchTestTasks();
+      return result;
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to run suite', runningSuiteId: null });
+      throw err;
+    }
+  },
+
+  fetchTaskDetails: async (taskId: string) => {
+    try {
+      const task = await invokeIpc<TestTask>('test:getTaskDetails', taskId);
+      return task;
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to fetch task details' });
+      throw err;
+    }
+  },
+
+  translateReason: async (text: string) => {
+    return invokeIpc<string>('test:translateReason', text);
   },
 }));
