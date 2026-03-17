@@ -164,10 +164,21 @@ export async function launchGatewayProcess(options: {
       options.onExit(child, code);
     });
 
+    child.stdout?.on('data', (data) => {
+      const raw = data.toString();
+      for (const line of raw.split(/\r?\n/)) {
+        if (line.trim()) {
+          logger.info(`[Gateway stdout] ${line}`);
+        }
+      }
+    });
+
     child.stderr?.on('data', (data) => {
       const raw = data.toString();
       for (const line of raw.split(/\r?\n/)) {
-        options.onStderrLine(line);
+        if (line.trim()) {
+          options.onStderrLine(line);
+        }
       }
     });
 
