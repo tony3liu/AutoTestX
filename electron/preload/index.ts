@@ -156,6 +156,10 @@ const electronAPI = {
         'test:listTasks',
         'test:getTaskDetails',
         'test:translateReason',
+        'test:updateReportStatus',
+        'test:deleteTask',
+        'test:deleteReport',
+        'test:getDashboardStats',
       ];
 
       if (validChannels.includes(channel)) {

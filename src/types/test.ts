@@ -52,3 +52,10 @@ export interface TestTask {
   createdAt: number;
   reports?: TestResult[];
 }
+export interface DashboardStats {
+  caseCount: number;
+  passRate: number;
+  failCount24h: number;
+  avgDuration: number;
+  recentActivity: { date: string; total: number; pass: number }[];
+}

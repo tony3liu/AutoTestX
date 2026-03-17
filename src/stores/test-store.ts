@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { invokeIpc } from '@/lib/api-client';
-import type { TestCase, TestSuite, TestResult, TestTask } from '@/types/test';
+import type { TestCase, TestSuite, TestResult, TestTask, DashboardStats } from '@/types/test';
 
 interface TestState {
   // Data
@@ -8,6 +8,7 @@ interface TestState {
   testSuites: TestSuite[];
   testReports: TestResult[];
   testTasks: TestTask[];
+  dashboardStats: DashboardStats | null;
   
   // Loading States
   isLoading: boolean;
@@ -21,6 +22,7 @@ interface TestState {
   fetchTestReports: () => Promise<void>;
   fetchTestSuites: () => Promise<void>;
   fetchTestTasks: () => Promise<void>;
+  fetchDashboardStats: () => Promise<void>;
   
   createTestCase: (testCase: Omit<TestCase, 'createdAt'>) => Promise<TestCase>;
   updateTestCase: (testCase: TestCase) => Promise<TestCase>;
@@ -34,6 +36,10 @@ interface TestState {
   runSuite: (suiteId: string) => Promise<{ taskId: string }>;
   fetchTaskDetails: (taskId: string) => Promise<TestTask>;
   translateReason: (text: string) => Promise<string>;
+  
+  updateReportStatus: (reportId: string, status: string) => Promise<void>;
+  deleteReport: (reportId: string) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
 }
 
 export const useTestStore = create<TestState>((set, get) => ({
@@ -41,6 +47,7 @@ export const useTestStore = create<TestState>((set, get) => ({
   testSuites: [],
   testReports: [],
   testTasks: [],
+  dashboardStats: null,
   
   isLoading: false,
   isSaving: false,
@@ -85,6 +92,15 @@ export const useTestStore = create<TestState>((set, get) => ({
       set({ testTasks: tasks, isLoading: false });
     } catch (err: any) {
       set({ error: err.message || 'Failed to fetch tasks', isLoading: false });
+    }
+  },
+
+  fetchDashboardStats: async () => {
+    try {
+      const stats = await invokeIpc<DashboardStats>('test:getDashboardStats');
+      set({ dashboardStats: stats });
+    } catch (err: any) {
+      console.error('Failed to fetch dashboard stats', err);
     }
   },
 
@@ -217,5 +233,20 @@ export const useTestStore = create<TestState>((set, get) => ({
 
   translateReason: async (text: string) => {
     return invokeIpc<string>('test:translateReason', text);
+  },
+
+  updateReportStatus: async (reportId, status) => {
+    await invokeIpc('test:updateReportStatus', { reportId, status });
+  },
+
+  deleteReport: async (reportId) => {
+    await invokeIpc('test:deleteReport', reportId);
+  },
+
+  deleteTask: async (taskId) => {
+    await invokeIpc('test:deleteTask', taskId);
+    set(state => ({
+      testTasks: state.testTasks.filter(t => t.id !== taskId)
+    }));
   },
 }));

@@ -3,9 +3,10 @@ import { useTestStore } from '@/stores/test-store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Terminal, Clock, CheckCircle2, XCircle, AlertCircle, List, ChevronRight, ChevronDown, Activity } from 'lucide-react';
+import { Terminal, Clock, CheckCircle2, XCircle, AlertCircle, List, ChevronRight, ChevronDown, Activity, Trash2, Edit2, Check, X } from 'lucide-react';
 import type { TestTask, TestResult } from '@/types/test';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -16,9 +17,14 @@ function StatusBadge({ status }: { status: string }) {
   }
 }
 
-function ReportItem({ report }: { report: TestResult }) {
+function ReportItem({ report, onUpdate, onDelete }: { 
+  report: TestResult; 
+  onUpdate: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const [translatedReason, setTranslatedReason] = useState<string | null>(null);
+  const [isEditingStatus, setIsEditingStatus] = useState(false);
 
   return (
     <div className="border border-border/40 rounded-lg overflow-hidden mb-3 bg-secondary/5 transition-all">
@@ -29,12 +35,56 @@ function ReportItem({ report }: { report: TestResult }) {
         <div className="flex items-center gap-3">
           {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
           <span className="font-medium text-sm">{report.test_case_name || report.caseId}</span>
-          <Badge variant={report.status === 'pass' ? 'outline' : 'destructive'} className={cn("text-[10px] px-1.5 py-0", report.status === 'pass' && "text-green-500 border-green-500/30")}>
-            {report.status.toUpperCase()}
-          </Badge>
+          <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
+            <Badge 
+              variant={report.status === 'pass' ? 'outline' : 'destructive'} 
+              className={cn("text-[10px] px-1.5 py-0 flex items-center gap-1", report.status === 'pass' && "text-green-500 border-green-500/30")}
+              onClick={() => setIsEditingStatus(!isEditingStatus)}
+            >
+              {report.status.toUpperCase()}
+              <Edit2 className="w-2 h-2 opacity-50" />
+            </Badge>
+
+            {isEditingStatus && (
+              <div className="flex items-center bg-background border rounded shadow-sm px-1 py-0.5 gap-1 animate-in fade-in scale-in-95 duration-100">
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-5 w-5 text-green-500 hover:bg-green-500/10" 
+                  onClick={() => { onUpdate(report.reportId!, 'pass'); setIsEditingStatus(false); }}
+                >
+                  <Check className="w-3 h-3" />
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-5 w-5 text-red-500 hover:bg-red-500/10"
+                  onClick={() => { onUpdate(report.reportId!, 'fail'); setIsEditingStatus(false); }}
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-5 w-5 text-orange-500 hover:bg-orange-500/10"
+                  onClick={() => { onUpdate(report.reportId!, 'error'); setIsEditingStatus(false); }}
+                >
+                  <AlertCircle className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-4 text-[12px] text-muted-foreground">
           <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {(report.duration || 0).toFixed(1)}s</span>
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            onClick={(e) => { e.stopPropagation(); onDelete(report.reportId!); }}
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
         </div>
       </div>
 
@@ -106,7 +156,7 @@ function ReportItem({ report }: { report: TestResult }) {
 }
 
 export function Reports() {
-  const { testTasks, fetchTestTasks, fetchTaskDetails, isLoading } = useTestStore();
+  const { testTasks, fetchTestTasks, fetchTaskDetails, deleteTask, deleteReport, updateReportStatus, isLoading } = useTestStore();
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [taskDetails, setTaskDetails] = useState<Record<string, TestTask>>({});
 
@@ -121,15 +171,37 @@ export function Reports() {
       setExpandedTaskId(null);
     } else {
       setExpandedTaskId(taskId);
-      if (!taskDetails[taskId]) {
-        try {
-          const details = await fetchTaskDetails(taskId);
-          setTaskDetails(prev => ({ ...prev, [taskId]: details }));
-        } catch (e) {
-          console.error('Failed to load task details', e);
-        }
-      }
+      refreshTaskDetails(taskId);
     }
+  };
+
+  const refreshTaskDetails = async (taskId: string) => {
+    try {
+      const details = await fetchTaskDetails(taskId);
+      setTaskDetails(prev => ({ ...prev, [taskId]: details }));
+    } catch (e) {
+      console.error('Failed to load task details', e);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('确认删除该任务记录及其所有报告吗？')) {
+      await deleteTask(taskId);
+    }
+  };
+
+  const handleDeleteReport = async (taskId: string, reportId: string) => {
+    if (confirm('确认删除该用例报告吗？')) {
+      await deleteReport(reportId);
+      refreshTaskDetails(taskId);
+    }
+  };
+
+  const handleUpdateReport = async (taskId: string, reportId: string, status: string) => {
+    await updateReportStatus(reportId, status);
+    refreshTaskDetails(taskId);
+    fetchTestTasks(); // Refresh summary pass/fail counts
   };
 
   return (
@@ -204,8 +276,16 @@ export function Reports() {
                         </div>
                         <Progress value={progress} className="h-1.5 w-full bg-secondary" />
                       </div>
-                      <StatusBadge status={task.status} />
-                      {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+                       <StatusBadge status={task.status} />
+                       <Button 
+                         size="icon" 
+                         variant="ghost" 
+                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                         onClick={(e) => handleDeleteTask(task.id, e)}
+                       >
+                         <Trash2 className="w-4 h-4" />
+                       </Button>
+                       {isExpanded ? <ChevronDown className="w-5 h-5 text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
                     </div>
                   </div>
                 </CardHeader>
@@ -225,7 +305,12 @@ export function Reports() {
                       ) : details.reports && details.reports.length > 0 ? (
                         <div className="space-y-1">
                           {details.reports.map(report => (
-                            <ReportItem key={report.reportId} report={report} />
+                            <ReportItem 
+                              key={report.reportId} 
+                              report={report} 
+                              onUpdate={(id, status) => handleUpdateReport(task.id, id, status)}
+                              onDelete={(id) => handleDeleteReport(task.id, id)}
+                            />
                           ))}
                         </div>
                       ) : (

@@ -372,6 +372,102 @@ function registerTestHandlers(): void {
       return `翻译失败: ${err.message}`;
     }
   });
+
+  ipcMain.handle('test:updateReportStatus', async (_, { reportId, status }: { reportId: string, status: string }) => {
+    const db = testDb.getDb();
+    const report = db.prepare('SELECT * FROM test_reports WHERE id = ?').get(reportId) as any;
+    if (!report) throw new Error('Report not found');
+
+    const oldStatus = report.status;
+    db.prepare('UPDATE test_reports SET status = ? WHERE id = ?').run(status, reportId);
+
+    // Sync task counters if relevant
+    if (report.task_id && oldStatus !== status) {
+      const task = db.prepare('SELECT * FROM test_tasks WHERE id = ?').get(report.task_id) as any;
+      if (task) {
+        let passCount = task.pass_count;
+        let failCount = task.fail_count;
+        let errorCount = task.error_count;
+
+        // Decrement old
+        if (oldStatus === 'pass') passCount--;
+        else if (oldStatus === 'fail') failCount--;
+        else if (oldStatus === 'error') errorCount--;
+
+        // Increment new
+        if (status === 'pass') passCount++;
+        else if (status === 'fail') failCount++;
+        else if (status === 'error') errorCount++;
+
+        db.prepare('UPDATE test_tasks SET pass_count = ?, fail_count = ?, error_count = ? WHERE id = ?').run(
+          passCount, failCount, errorCount, report.task_id
+        );
+      }
+    }
+    return { success: true };
+  });
+
+  ipcMain.handle('test:deleteTask', async (_, taskId: string) => {
+    const db = testDb.getDb();
+    db.transaction(() => {
+      db.prepare('DELETE FROM test_reports WHERE task_id = ?').run(taskId);
+      db.prepare('DELETE FROM test_tasks WHERE id = ?').run(taskId);
+    })();
+    return { success: true };
+  });
+
+  ipcMain.handle('test:deleteReport', async (_, reportId: string) => {
+    const db = testDb.getDb();
+    db.prepare('DELETE FROM test_reports WHERE id = ?').run(reportId);
+    return { success: true };
+  });
+
+  ipcMain.handle('test:getDashboardStats', async () => {
+    const db = testDb.getDb();
+    const caseCount = (db.prepare('SELECT COUNT(*) as count FROM test_cases').get() as any).count;
+    
+    // Last 7 days pass rate
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const stats = db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END) as pass
+      FROM test_reports 
+      WHERE created_at > ?
+    `).get(sevenDaysAgo) as any;
+    
+    const passRate = stats.total > 0 ? (stats.pass / stats.total) * 100 : 0;
+    
+    // Average duration
+    const avgDurationRow = db.prepare('SELECT AVG(duration) as avg FROM test_reports WHERE status != "error"').get() as any;
+    const avgDuration = avgDurationRow?.avg || 0;
+
+    // Latest failures
+    const failures = db.prepare(`
+      SELECT COUNT(*) as count FROM test_reports 
+      WHERE status = 'fail' AND created_at > ?
+    `).get(Date.now() - 24 * 60 * 60 * 1000) as any;
+
+    // Recent activity for chart
+    const recentActivity = db.prepare(`
+      SELECT 
+        strftime('%Y-%m-%d', datetime(created_at/1000, 'unixepoch', 'localtime')) as date,
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END) as pass
+      FROM test_reports
+      WHERE created_at > ?
+      GROUP BY date
+      ORDER BY date ASC
+    `).all(sevenDaysAgo) as any[];
+
+    return {
+      caseCount,
+      passRate: Math.round(passRate),
+      failCount24h: failures.count,
+      avgDuration: Math.round(avgDuration),
+      recentActivity
+    };
+  });
 }
 
 import { testScheduler } from '../services/scheduler';
