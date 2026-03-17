@@ -98,9 +98,9 @@ function ReportItem({ report, onUpdate, onDelete }: {
 
           {report.failureReason && (
             <div className="space-y-2">
-              <div className="p-4 rounded-md bg-amber-500/10 border border-amber-500/20">
+              <div className="p-4 rounded-md bg-indigo-500/5 border border-indigo-500/20">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-[12px] font-semibold text-amber-500 flex items-center gap-2">
+                  <h4 className="text-[12px] font-semibold text-indigo-500 flex items-center gap-2">
                     <AlertCircle className="w-3 h-3" /> 判定理由 (Judge Reasoning)
                   </h4>
                   <button
@@ -118,7 +118,7 @@ function ReportItem({ report, onUpdate, onDelete }: {
                         btn.disabled = false;
                       }
                     }}
-                    className="text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 px-2 py-0.5 rounded transition-colors"
+                    className="text-[10px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 px-2 py-0.5 rounded transition-colors border border-indigo-500/20"
                   >
                     翻译成中文
                   </button>
@@ -127,7 +127,7 @@ function ReportItem({ report, onUpdate, onDelete }: {
                   {report.failureReason}
                 </p>
                 {translatedReason && (
-                  <div className="mt-3 pt-3 border-t border-amber-500/10 text-[12px] text-foreground leading-relaxed animate-in fade-in slide-in-from-top-1">
+                  <div className="mt-3 pt-3 border-t border-indigo-500/10 text-[12px] text-foreground leading-relaxed animate-in fade-in slide-in-from-top-1">
                     <div className="font-semibold mb-1">🔍 中文解释：</div>
                     {translatedReason}
                   </div>
