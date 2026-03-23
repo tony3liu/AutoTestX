@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Plus, Clock, Pencil, Trash2, Calendar, Activity, List, Layout } from 'lucide-react';
+import { Plus, Clock, Pencil, Trash2, Calendar, Activity, List, Layout, Sparkles, Wand2, Loader2 } from 'lucide-react';
 import { useScheduleStore } from '@/stores/schedule-store';
 import { useTestStore } from '@/stores/test-store';
 import { useEffect, useState } from 'react';
@@ -15,6 +15,8 @@ import { zhCN } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { convertNaturalLanguageToCron } from '@/lib/cron-utils';
 
 export function Schedules() {
   const { schedules, fetchSchedules, createSchedule, updateSchedule, deleteSchedule, toggleSchedule, isLoading, isSaving } = useScheduleStore();
@@ -31,6 +33,10 @@ export function Schedules() {
     cronExpr: '0 0 * * *', // Default daily at midnight
     type: 'case' as 'case' | 'suite'
   });
+
+  const [showAiInput, setShowAiInput] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isConvertingLocal, setIsConvertingLocal] = useState(false);
 
   useEffect(() => {
     fetchSchedules();
@@ -62,15 +68,36 @@ export function Schedules() {
 
       if (editingId) {
         await updateSchedule(editingId, payload);
-        toast.success('计划更新成功');
+        toast.success('已更新定期计划');
       } else {
         await createSchedule(payload);
-        toast.success('计划创建成功');
+        toast.success('已创建定期计划');
       }
       setIsOpen(false);
       resetForm();
-    } catch (e) {
-      toast.error('保存失败');
+      setShowAiInput(false); // Reset AI input state
+      setAiPrompt(''); // Clear AI prompt
+    } catch (err) {
+      toast.error('保存失败，请检查数据');
+    }
+  };
+
+  const handleAiConvert = async () => {
+    if (!aiPrompt.trim()) return;
+    
+    setIsConvertingLocal(true);
+    try {
+      const cronExpr = await convertNaturalLanguageToCron(aiPrompt);
+      setFormData(prev => ({ ...prev, cronExpr }));
+      toast.success('成功从自然语言生成 Cron 表达式', {
+        description: `"${aiPrompt}" -> ${cronExpr}`
+      });
+      setShowAiInput(false);
+      setAiPrompt('');
+    } catch (err) {
+      toast.error('AI 转换失败: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsConvertingLocal(false);
     }
   };
 
@@ -165,12 +192,61 @@ export function Schedules() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base font-semibold">Cron 表达式</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Cron 表达式</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs text-primary hover:text-primary/80 decoration-primary/30"
+                        onClick={() => setShowAiInput(!showAiInput)}
+                      >
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        AI 智能生成
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>输入自然语言自动生成 Cron</TooltipContent>
+                  </Tooltip>
+                </div>
+                
+                {showAiInput && (
+                  <div className="mb-2 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="relative group">
+                      <Input 
+                        placeholder="例如：每天凌晨 3 点，或者：每 30 分钟" 
+                        className="pr-10 border-primary/30 bg-primary/5 focus-visible:ring-primary/40 focus-visible:border-primary/50"
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAiConvert()}
+                        disabled={isConvertingLocal}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-primary hover:bg-primary/10 disabled:opacity-50"
+                        onClick={handleAiConvert}
+                        disabled={!aiPrompt.trim() || isConvertingLocal}
+                      >
+                        {isConvertingLocal ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground pl-1">
+                      💡 提示：输入具体的时间描述，回车即可转换
+                    </p>
+                  </div>
+                )}
+
                 <Input 
                   placeholder="* * * * *" 
                   value={formData.cronExpr}
                   onChange={(e) => setFormData({ ...formData, cronExpr: e.target.value })}
                 />
+                
                 <div className="mt-2 p-3 bg-secondary/30 rounded-lg space-y-1">
                   <p className="text-xs text-muted-foreground font-medium">常用参考：</p>
                   <div className="grid grid-cols-2 gap-2">
