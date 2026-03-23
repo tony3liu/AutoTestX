@@ -24,7 +24,8 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "init": "pnpm install && pnpm run uv:download && pnpm run fix-prompts",
+        "postinstall": "node scripts/fix-browser-use-prompts.mjs",
+        "init": "pnpm install && pnpm run uv:download",
         "dev": "vite",
         "build": "vite build && zx scripts/bundle-openclaw.mjs && zx scripts/bundle-openclaw-plugins.mjs && zx scripts/bundle-preinstalled-skills.mjs && electron-builder",
         "build:vite": "vite build",

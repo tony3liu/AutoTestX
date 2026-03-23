@@ -11,7 +11,12 @@
         "devConsole": "開発者コンソール",
         "models": "モデル",
         "deleteSessionConfirm": "セッション \"{{label}}\" を削除してもよろしいですか？",
-        "openClawPage": "OpenClaw ページ"
+        "openClawPage": "OpenClaw ページ",
+        "smartQA": "スマートQA",
+        "testOrchestration": "テスト編成",
+        "schedules": "定期実行",
+        "reports": "テストレポート",
+        "modelSettings": "モデル設定"
     },
     "actions": {
         "save": "保存",

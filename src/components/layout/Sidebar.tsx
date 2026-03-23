@@ -7,7 +7,6 @@ import {
   Settings as SettingsIcon,
   PanelLeftClose,
   PanelLeft,
-  LayoutDashboard,
   ListTodo,
   FileText,
   Brain,
@@ -21,6 +20,7 @@ import { useSettingsStore } from '@/stores/settings';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import logoPng from '@/assets/logo.png';
+import { useTranslation } from 'react-i18next';
 
 interface NavItemProps {
   to: string;
@@ -69,18 +69,18 @@ function NavItem({ to, icon, label, badge, collapsed, onClick }: NavItemProps) {
 }
 
 export function Sidebar() {
+  const { t } = useTranslation('common');
   const sidebarCollapsed = useSettingsStore((state) => state.sidebarCollapsed);
   const setSidebarCollapsed = useSettingsStore((state) => state.setSidebarCollapsed);
 
   const navItems = [
-    { to: '/dashboard', icon: <LayoutDashboard className="h-5 w-5" strokeWidth={2} />, label: '测试大盘' },
-    { to: '/chat', icon: <MessageSquare className="h-5 w-5" strokeWidth={2} />, label: '智能问答' },
-    { to: '/channels', icon: <MessagesSquare className="h-5 w-5" strokeWidth={2} />, label: '频道' },
-    { to: '/skills', icon: <Puzzle className="h-5 w-5" strokeWidth={2} />, label: '技能' },
-    { to: '/test-cases', icon: <ListTodo className="h-5 w-5" strokeWidth={2} />, label: '用例管理' },
-    { to: '/schedules', icon: <Clock className="h-5 w-5" strokeWidth={2} />, label: '定期执行' },
-    { to: '/reports', icon: <FileText className="h-5 w-5" strokeWidth={2} />, label: '测试报告' },
-    { to: '/models', icon: <Brain className="h-5 w-5" strokeWidth={2} />, label: '模型设置' },
+    { to: '/chat', icon: <MessageSquare className="h-5 w-5" strokeWidth={2} />, label: t('sidebar.smartQA') },
+    { to: '/channels', icon: <MessagesSquare className="h-5 w-5" strokeWidth={2} />, label: t('sidebar.channels') },
+    { to: '/skills', icon: <Puzzle className="h-5 w-5" strokeWidth={2} />, label: t('sidebar.skills') },
+    { to: '/test-cases', icon: <ListTodo className="h-5 w-5" strokeWidth={2} />, label: t('sidebar.testOrchestration') },
+    { to: '/schedules', icon: <Clock className="h-5 w-5" strokeWidth={2} />, label: t('sidebar.schedules') },
+    { to: '/reports', icon: <FileText className="h-5 w-5" strokeWidth={2} />, label: t('sidebar.reports') },
+    { to: '/models', icon: <Brain className="h-5 w-5" strokeWidth={2} />, label: t('sidebar.modelSettings') },
   ];
 
   return (
@@ -145,7 +145,7 @@ export function Sidebar() {
               <div className={cn("flex shrink-0 items-center justify-center transition-colors", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")}>
                 <SettingsIcon className="h-5 w-5" strokeWidth={2} />
               </div>
-              {!sidebarCollapsed && <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">系统设置</span>}
+              {!sidebarCollapsed && <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{t('sidebar.settings')}</span>}
             </>
           )}
         </NavLink>

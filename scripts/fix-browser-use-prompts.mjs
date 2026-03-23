@@ -9,8 +9,8 @@ const projectRoot = path.resolve(__dirname, '..');
 const agentDir = path.join(projectRoot, 'node_modules', 'browser-use', 'dist', 'agent');
 
 if (!fs.existsSync(agentDir)) {
-  console.error(`Error: Directory not found: ${agentDir}`);
-  process.exit(1);
+  console.warn(`Warning: Directory not found: ${agentDir} — skipping prompt fix (run "pnpm run fix-prompts" manually after install)`);
+  process.exit(0);
 }
 
 // Find the prompts directory in the project root
