@@ -43,6 +43,7 @@ import {
   ensureQQBotPluginInstalled,
   ensureWeComPluginInstalled,
 } from '../utils/plugin-install';
+import { ensurePlaywrightBrowsersInstalled } from '../utils/playwright-install';
 import { updateSkillConfig, getSkillConfig, getAllSkillConfigs } from '../utils/skill-config';
 import { whatsAppLoginManager } from '../utils/whatsapp-login';
 import { getProviderConfig } from '../utils/provider-registry';
@@ -1771,6 +1772,18 @@ function registerOpenClawHandlers(gatewayManager: GatewayManager): void {
       }
       return { success: true, command: getOpenClawCliCommand() };
     } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  });
+
+  // Install Playwright browsers (chromium)
+  ipcMain.handle('playwright:install', async (_, force?: boolean) => {
+    try {
+      logger.info(`playwright:install (force=${force})`);
+      const result = await ensurePlaywrightBrowsersInstalled(force);
+      return result;
+    } catch (error) {
+      logger.error('playwright:install failed', error);
       return { success: false, error: String(error) };
     }
   });

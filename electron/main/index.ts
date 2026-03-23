@@ -36,6 +36,7 @@ import { deviceOAuthManager } from '../utils/device-oauth';
 import { browserOAuthManager } from '../utils/browser-oauth';
 import { whatsAppLoginManager } from '../utils/whatsapp-login';
 import { syncAllProviderAuthToRuntime } from '../services/providers/provider-runtime-sync';
+import { ensurePlaywrightBrowsersInstalled } from '../utils/playwright-install';
 
 const WINDOWS_APP_USER_MODEL_ID = 'app.autotestx.desktop';
 
@@ -312,6 +313,11 @@ async function initialize(): Promise<void> {
   // to ~/.openclaw/extensions/ so they are always up-to-date after an app update.
   void ensureAllBundledPluginsInstalled().catch((error) => {
     logger.warn('Failed to install/upgrade bundled plugins:', error);
+  });
+
+  // Pre-deploy/upgrade Playwright browsers (chromium) (non-blocking)
+  void ensurePlaywrightBrowsersInstalled().catch((error) => {
+    logger.warn('Failed to install/upgrade Playwright browsers:', error);
   });
 
   // Bridge gateway and host-side events before any auto-start logic runs, so

@@ -200,5 +200,22 @@ export async function runOpenClawDoctor(): Promise<OpenClawDoctorResult> {
 }
 
 export async function runOpenClawDoctorFix(): Promise<OpenClawDoctorResult> {
-  return await runDoctorCommandWithArgs('fix', OPENCLAW_DOCTOR_FIX_ARGS);
+  const result = await runDoctorCommandWithArgs('fix', OPENCLAW_DOCTOR_FIX_ARGS);
+
+  // Also ensure Playwright browsers are installed as part of the 'fix' process.
+  try {
+    const { ensurePlaywrightBrowsersInstalled } = await import('./playwright-install');
+    const playwrightResult = await ensurePlaywrightBrowsersInstalled(true);
+    if (!playwrightResult.success) {
+      result.stderr += `\n[Playwright Fix Error]: ${playwrightResult.error}`;
+      result.success = false;
+    } else {
+      result.stdout += `\n[Playwright Fix]: Chromium browsers installed successfully.`;
+    }
+  } catch (error) {
+    logger.warn('Failed to run Playwright fix during doctor fix:', error);
+    result.stderr += `\n[Playwright Fix Exception]: ${String(error)}`;
+  }
+
+  return result;
 }

@@ -259,7 +259,13 @@
     "installCmdDesc": "Installs ~/.local/bin/openclaw (no admin required)",
     "installTitle": "Install OpenClaw Command",
     "installMessage": "Install the \"openclaw\" command?",
-    "installDetail": "This will create ~/.local/bin/openclaw. Ensure ~/.local/bin is on your PATH if you want to run it globally."
+    "installDetail": "This will create ~/.local/bin/openclaw. Ensure ~/.local/bin is on your PATH if you want to run it globally.",
+    "playwright": "Playwright Browsers",
+    "playwrightDesc": "Ensure Playwright browser drivers (Chromium) are installed.",
+    "installPlaywright": "Install Chromium",
+    "playwrightInstalling": "Installing...",
+    "playwrightSucceeded": "Playwright browsers installed",
+    "playwrightFailed": "Failed to install Playwright browsers"
   },
   "about": {
     "title": "About",
