@@ -76,5 +76,18 @@
     "tip1": "使用参数化数据对象来提高测试覆盖率，无需重复用例逻辑。",
     "tip2": "将高频用例组合成 Suite，减少 70% 的手动触发成本。",
     "tip3": "拆分断言粒度，每步骤建议不超过 3 条断言以提高定位效率。",
-    "activity7Day": "7 天活跃度"
+    "activity7Day": "7 天活跃度",
+    "agent": {
+        "executionConfig": "执行引擎配置",
+        "sheetTitle": "Agent 运行设置",
+        "sheetDesc": "配置专用于自动化测试的视觉辅助 Agent。您可以在这里为 Agent 分配更强的视觉模型（如 GPT-4o），或直接配置 API Key 专线。",
+        "account": "执行账户",
+        "modelOverride": "模型 ID (覆盖)",
+        "modelOverrideDesc": "留空则使用所选账户的默认模型",
+        "apiKey": "直连 API Key",
+        "apiKeyDesc": "如果配置了此项，将优先于账户设置",
+        "baseUrl": "直连节点 (Base URL)",
+        "baseUrlDesc": "如果配置了此项，将优先于账户设置",
+        "save": "保存并应用"
+    }
 }

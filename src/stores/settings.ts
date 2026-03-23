@@ -41,6 +41,12 @@ interface SettingsState {
   // Setup
   setupComplete: boolean;
 
+  // Agent
+  visionAgentModel: string;
+  visionAgentAccountId: string;
+  visionAgentKey: string;
+  visionAgentBaseUrl: string;
+
   // Actions
   init: () => Promise<void>;
   setTheme: (theme: Theme) => void;
@@ -61,6 +67,10 @@ interface SettingsState {
   setAutoDownloadUpdate: (value: boolean) => void;
   setSidebarCollapsed: (value: boolean) => void;
   setDevModeUnlocked: (value: boolean) => void;
+  setVisionAgentModel: (model: string) => void;
+  setVisionAgentAccountId: (accountId: string) => void;
+  setVisionAgentKey: (key: string) => void;
+  setVisionAgentBaseUrl: (url: string) => void;
   markSetupComplete: () => void;
   resetSettings: () => void;
 }
@@ -85,6 +95,10 @@ const defaultSettings = {
   sidebarCollapsed: false,
   devModeUnlocked: false,
   setupComplete: false,
+  visionAgentModel: '',
+  visionAgentAccountId: '',
+  visionAgentKey: '',
+  visionAgentBaseUrl: '',
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -166,6 +180,34 @@ export const useSettingsStore = create<SettingsState>()(
         void hostApiFetch('/api/settings/devModeUnlocked', {
           method: 'PUT',
           body: JSON.stringify({ value: devModeUnlocked }),
+        }).catch(() => { });
+      },
+      setVisionAgentModel: (visionAgentModel) => {
+        set({ visionAgentModel });
+        void hostApiFetch('/api/settings/visionAgentModel', {
+          method: 'PUT',
+          body: JSON.stringify({ value: visionAgentModel }),
+        }).catch(() => { });
+      },
+      setVisionAgentAccountId: (visionAgentAccountId) => {
+        set({ visionAgentAccountId });
+        void hostApiFetch('/api/settings/visionAgentAccountId', {
+          method: 'PUT',
+          body: JSON.stringify({ value: visionAgentAccountId }),
+        }).catch(() => { });
+      },
+      setVisionAgentKey: (visionAgentKey) => {
+        set({ visionAgentKey });
+        void hostApiFetch('/api/settings/visionAgentKey', {
+          method: 'PUT',
+          body: JSON.stringify({ value: visionAgentKey }),
+        }).catch(() => { });
+      },
+      setVisionAgentBaseUrl: (visionAgentBaseUrl) => {
+        set({ visionAgentBaseUrl });
+        void hostApiFetch('/api/settings/visionAgentBaseUrl', {
+          method: 'PUT',
+          body: JSON.stringify({ value: visionAgentBaseUrl }),
         }).catch(() => { });
       },
       markSetupComplete: () => set({ setupComplete: true }),

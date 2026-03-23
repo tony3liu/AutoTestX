@@ -4,6 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Select } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { useSettingsStore } from '@/stores/settings';
 import { 
   Plus, PlayCircle, Brain, Pencil, Trash2, List, Layout, CheckCircle2,
   Filter, Clock, MoreVertical, Sparkles, TrendingUp,
@@ -47,6 +50,13 @@ export function TestCases() {
     dashboardStats, fetchDashboardStats,
     isLoading, isSaving, runningTestCaseId, runningSuiteId
   } = useTestStore();
+
+  const {
+    visionAgentModel, visionAgentAccountId, visionAgentKey, visionAgentBaseUrl,
+    setVisionAgentModel, setVisionAgentAccountId, setVisionAgentKey, setVisionAgentBaseUrl
+  } = useSettingsStore();
+
+  const [isAgentSettingsOpen, setIsAgentSettingsOpen] = useState(false);
   
   const { accounts, fetchProviders } = useProviderStore();
   
@@ -295,13 +305,28 @@ export function TestCases() {
       {/* ========== LEFT: Main Content ========== */}
       <div className="flex-1 flex flex-col">
         <div className="p-8 pb-6 space-y-6">
-          {/* Page Header */}
-          <div className="space-y-2">
-            <h2 className="text-4xl font-black tracking-tight text-foreground">{t('pageTitle')}</h2>
-            <p className="text-muted-foreground text-[15px] max-w-xl leading-relaxed">
-              {t('pageSubtitle')}
-            </p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <h2 className="text-4xl font-black tracking-tight text-foreground">{t('pageTitle')}</h2>
+              <p className="text-muted-foreground font-medium">{t('subtitle')}</p>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              onClick={() => setIsAgentSettingsOpen(true)}
+              className="rounded-2xl border-black/10 dark:border-white/10 h-12 px-6 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-all font-semibold"
+            >
+              <Brain className="h-5 w-5 mr-3 text-primary" />
+              {t('agent.executionConfig', { defaultValue: 'Execution Engine' })}
+              <Badge variant="secondary" className="ml-3 rounded-full bg-primary/10 text-primary border-none">
+                {visionAgentAccountId ? accounts.find(a => a.id === visionAgentAccountId)?.label || 'Override' : 'Default'}
+              </Badge>
+            </Button>
           </div>
+          <p className="text-muted-foreground text-[15px] max-w-xl leading-relaxed">
+            {t('pageSubtitle')}
+          </p>
+        </div>
 
           {/* Toolbar: Filter + Sort + Search + New */}
           <div className="flex items-center gap-3 flex-wrap">
@@ -567,12 +592,11 @@ export function TestCases() {
                   </Card>
                 </motion.div>
               );
-            })}
-          </div>
+          })}
         </div>
       </div>
 
-      {/* ========== RIGHT: Stats Sidebar ========== */}
+        {/* ========== RIGHT: Stats Sidebar ========== */}
       <div className="w-[280px] shrink-0 border-l border-border/40 bg-secondary/5 hidden lg:block">
         <div className="p-5 space-y-4">
           {/* System Health */}
@@ -766,6 +790,112 @@ export function TestCases() {
           <SheetFooter className="mt-auto pt-6 border-t">
             <Button onClick={handleSaveSuite} disabled={isSaving || !suiteFormData.name || suiteFormData.testCaseIds.length === 0}>
                {t('saveSuite')}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* Confirm Dialogs */}
+      <ConfirmDialog
+        open={!!caseToDelete}
+        title={t('confirmDeleteCase')}
+        message={t('confirmDeleteCaseMsg')}
+        onConfirm={() => { if (caseToDelete) handleDeleteCase(caseToDelete); }}
+        onCancel={() => setCaseToDelete(null)}
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={!!suiteToDelete}
+        title={t('confirmDeleteSuite')}
+        message={t('confirmDeleteSuiteMsg')}
+        onConfirm={() => { if (suiteToDelete) handleDeleteSuite(suiteToDelete); }}
+        onCancel={() => setSuiteToDelete(null)}
+        variant="destructive"
+      />
+
+      {/* Vision Agent Settings Sheet */}
+      <Sheet open={isAgentSettingsOpen} onOpenChange={setIsAgentSettingsOpen}>
+        <SheetContent className="w-[450px] sm:max-w-[450px] flex flex-col p-8 bg-background border-l border-border/40">
+          <SheetHeader className="text-left">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 text-primary font-bold">
+              <Brain className="h-6 w-6" />
+            </div>
+            <SheetTitle className="text-2xl font-bold tracking-tight">{t('agent.sheetTitle')}</SheetTitle>
+            <SheetDescription className="text-muted-foreground leading-relaxed mt-2">
+              {t('agent.sheetDesc')}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto py-8 space-y-8 scrollbar-none">
+            {/* 1. Account Selection */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-secondary/30 flex items-center justify-center text-xs font-bold text-foreground/70">1</span>
+                <Label className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">{t('agent.account')}</Label>
+              </div>
+              <Select 
+                value={visionAgentAccountId} 
+                onChange={e => setVisionAgentAccountId(e.target.value)}
+                className="h-12 rounded-xl border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 focus:ring-primary/20 transition-all font-medium"
+              >
+                <option value="">{t('defaultConfig')}</option>
+                {accounts.map(acc => (
+                  <option key={acc.id} value={acc.id}>{acc.label}</option>
+                ))}
+              </Select>
+            </div>
+
+            <Separator className="bg-border/20" />
+
+            {/* 2. Direct Overrides / Config */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg bg-secondary/30 flex items-center justify-center text-xs font-bold text-foreground/70">2</span>
+                <Label className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground">直连配置 / 覆写 (Overrides)</Label>
+              </div>
+
+              <div className="space-y-5 pl-10">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-foreground/80">{t('agent.modelOverride')}</Label>
+                  <Input 
+                    value={visionAgentModel} 
+                    onChange={e => setVisionAgentModel(e.target.value)}
+                    placeholder="e.g. gpt-4o"
+                    className="h-11 rounded-xl border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 focus:ring-primary/20 font-mono text-sm"
+                  />
+                  <p className="text-[11px] text-muted-foreground/80 leading-snug">{t('agent.modelOverrideDesc')}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-foreground/80">{t('agent.apiKey')}</Label>
+                  <Input 
+                    type="password"
+                    value={visionAgentKey} 
+                    onChange={e => setVisionAgentKey(e.target.value)}
+                    placeholder="sk-..."
+                    className="h-11 rounded-xl border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 focus:ring-primary/20 font-mono text-sm"
+                  />
+                  <p className="text-[11px] text-muted-foreground/80 leading-snug">{t('agent.apiKeyDesc')}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold text-foreground/80">{t('agent.baseUrl')}</Label>
+                  <Input 
+                    value={visionAgentBaseUrl} 
+                    onChange={e => setVisionAgentBaseUrl(e.target.value)}
+                    placeholder="https://api.openai.com/v1"
+                    className="h-11 rounded-xl border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 focus:ring-primary/20 font-mono text-sm"
+                  />
+                  <p className="text-[11px] text-muted-foreground/80 leading-snug">{t('agent.baseUrlDesc')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <SheetFooter className="mt-auto pt-6 border-t border-border/20">
+            <Button variant="default" className="w-full h-13 rounded-2xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-[0.98]" onClick={() => setIsAgentSettingsOpen(false)}>
+              {t('agent.save')}
             </Button>
           </SheetFooter>
         </SheetContent>

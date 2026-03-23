@@ -52,6 +52,12 @@ export interface AppSettings {
   sidebarCollapsed: boolean;
   devModeUnlocked: boolean;
 
+  // Agent
+  visionAgentModel: string;
+  visionAgentAccountId: string;
+  visionAgentKey: string;
+  visionAgentBaseUrl: string;
+
   // Presets
   selectedBundles: string[];
   enabledSkills: string[];
@@ -102,6 +108,12 @@ function createDefaultSettings(): AppSettings {
     // UI State
     sidebarCollapsed: false,
     devModeUnlocked: false,
+
+    // Agent
+    visionAgentModel: '',
+    visionAgentAccountId: '',
+    visionAgentKey: '',
+    visionAgentBaseUrl: '',
 
     // Presets
     selectedBundles: ['productivity', 'developer'],

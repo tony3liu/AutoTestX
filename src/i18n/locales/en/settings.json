@@ -176,6 +176,12 @@
     "errorDetails": "Error Details:",
     "help": "When auto-update is enabled, updates are downloaded and installed automatically."
   },
+  "agent": {
+    "title": "Test Agent",
+    "description": "Configure the AI model for test execution and vision",
+    "visionModel": "Vision Agent Model",
+    "visionModelDesc": "Dedicated high-vision model for executing tests (e.g. gpt-4o, claude-3-5-sonnet). This model is used ONLY for the test agent's browser interactions and visual reasoning."
+  },
   "advanced": {
     "title": "Advanced",
     "description": "Power-user options",
