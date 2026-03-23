@@ -24,7 +24,7 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "init": "pnpm install && pnpm run uv:download",
+        "init": "pnpm install && pnpm run uv:download && pnpm run fix-prompts",
         "dev": "vite",
         "build": "vite build && zx scripts/bundle-openclaw.mjs && zx scripts/bundle-openclaw-plugins.mjs && zx scripts/bundle-preinstalled-skills.mjs && electron-builder",
         "build:vite": "vite build",
@@ -41,6 +41,7 @@
         "uv:download:win": "zx scripts/download-bundled-uv.mjs --platform=win",
         "uv:download:linux": "zx scripts/download-bundled-uv.mjs --platform=linux",
         "uv:download:all": "zx scripts/download-bundled-uv.mjs --all",
+        "fix-prompts": "node scripts/fix-browser-use-prompts.mjs",
         "icons": "zx scripts/generate-icons.mjs",
         "package": "vite build && zx scripts/bundle-openclaw.mjs && zx scripts/bundle-openclaw-plugins.mjs",
         "package:mac": "pnpm run package && electron-builder --mac --publish never",
