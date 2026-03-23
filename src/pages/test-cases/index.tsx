@@ -291,9 +291,9 @@ export function TestCases() {
   }
 
   return (
-    <div className="flex-1 flex bg-background overflow-hidden">
+    <div className="flex-1 flex bg-background">
       {/* ========== LEFT: Main Content ========== */}
-      <div className="flex-1 flex flex-col overflow-y-auto">
+      <div className="flex-1 flex flex-col">
         <div className="p-8 pb-6 space-y-6">
           {/* Page Header */}
           <div className="space-y-2">
@@ -451,13 +451,13 @@ export function TestCases() {
                   animate={{ opacity: 1, y: 0 }}
                   className="group"
                 >
-                  <Card className="shadow-sm border-border/50 hover:shadow-md hover:border-border/80 transition-all duration-200 rounded-xl overflow-hidden">
+                  <Card className="shadow-sm border-border/50 hover:shadow-md hover:border-border/80 transition-all duration-200 rounded-xl">
                     <CardContent className="p-0">
                       <div className="flex items-center gap-0">
                         {/* Play / Run button area */}
                         <button
                           className={cn(
-                            "flex items-center justify-center w-16 h-full min-h-[72px] shrink-0 transition-colors",
+                            "flex items-center justify-center w-16 h-full min-h-[72px] shrink-0 transition-colors rounded-l-xl",
                             isCase
                               ? "hover:bg-primary/5 text-primary/60 hover:text-primary"
                               : "hover:bg-orange-500/5 text-orange-500/60 hover:text-orange-500",
@@ -535,15 +535,6 @@ export function TestCases() {
                                   <button
                                     className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-secondary/50 flex items-center gap-2 transition-colors"
                                     onClick={() => {
-                                      if (isCase) handleRunTest(item.id, item.name);
-                                      else handleRunSuite(item.id, item.name);
-                                    }}
-                                  >
-                                    <PlayCircle className="w-3.5 h-3.5 text-green-500" /> {t('run')}
-                                  </button>
-                                  <button
-                                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-secondary/50 flex items-center gap-2 transition-colors"
-                                    onClick={() => {
                                       if (isCase) {
                                         const tc = testCases.find(c => c.id === item.id);
                                         if (tc) handleEditCase(tc);
@@ -582,7 +573,7 @@ export function TestCases() {
       </div>
 
       {/* ========== RIGHT: Stats Sidebar ========== */}
-      <div className="w-[280px] shrink-0 border-l border-border/40 bg-secondary/5 overflow-y-auto hidden lg:block">
+      <div className="w-[280px] shrink-0 border-l border-border/40 bg-secondary/5 hidden lg:block">
         <div className="p-5 space-y-4">
           {/* System Health */}
           <Card className="border-border/40 shadow-sm overflow-hidden">

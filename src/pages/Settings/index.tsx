@@ -113,6 +113,23 @@ export function Settings() {
     timedOut?: boolean;
     error?: string;
   } | null>(null);
+  const [playwrightInstalling, setPlaywrightInstalling] = useState(false);
+
+  const handlePlaywrightInstall = async () => {
+    setPlaywrightInstalling(true);
+    try {
+      const result = await invokeIpc<{ success: boolean; error?: string }>('playwright:install');
+      if (result.success) {
+        toast.success(t('developer.playwrightSucceeded'));
+      } else {
+        toast.error(result.error || t('developer.playwrightFailed'));
+      }
+    } catch (error) {
+      toast.error(toUserMessage(error) || t('developer.playwrightFailed'));
+    } finally {
+      setPlaywrightInstalling(false);
+    }
+  };
 
   const handleShowLogs = async () => {
     try {
@@ -894,6 +911,27 @@ export function Settings() {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <Label className="text-[14px] font-medium text-foreground">{t('developer.playwright')}</Label>
+                        <p className="text-[13px] text-muted-foreground mt-1">
+                          {t('developer.playwrightDesc')}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handlePlaywrightInstall}
+                        disabled={playwrightInstalling}
+                        className="rounded-xl h-10 px-4 bg-transparent border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2${playwrightInstalling ? ' animate-spin' : ''}`} />
+                        {playwrightInstalling ? t('developer.playwrightInstalling') : t('developer.installPlaywright')}
+                      </Button>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
